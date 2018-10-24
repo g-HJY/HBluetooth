@@ -4,12 +4,14 @@
 
 
 1.第一步，使用前先实例化HBluetooth（全局单例）,并且必须调用enableBluetooth()方法开启蓝牙功能：
+ 
  HBluetooth.getInstance(this).enableBluetooth()；
  
  
  
  2.开启蓝牙能力后，接着你就可以开始进行蓝牙设备扫描，其中，type 为蓝牙设备类型（蓝牙2.0或4.0）：
- HBluetooth.getInstance(this)
+
+HBluetooth.getInstance(this)
                     .scanner()
                     .scan(type, new ScanCallBack() {
                 @Override
@@ -72,7 +74,8 @@
             
             
             3.一旦扫描到设备，你就可以找到目标设备并连接：
-             HBluetooth.getInstance(this)
+            
+            HBluetooth.getInstance(this)
                 .connector()
                 .connect(device, new ConnectCallBack() {
 
@@ -115,7 +118,8 @@
                 
                 
                 4.设备连接成功后，你可以开始跟设备进行通信：
-                HBluetooth.getInstance(this)
+               
+               HBluetooth.getInstance(this)
                                 .sender()
                                 .send(new byte[]{0x01, 0x02}, new SendCallBack() {
                             @Override
