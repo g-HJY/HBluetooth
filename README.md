@@ -87,17 +87,6 @@
                     @Override
                     public void onConnected() {
                         Log.i(TAG, "连接成功");
-                        HBluetooth.getInstance(this).sender().send(new byte[]{0x01, 0x02}, new SendCallBack() {
-                            @Override
-                            public void onSending() {
-                                Log.i(TAG, "命令发送中...");
-                            }
-
-                            @Override
-                            public void onReceived(DataInputStream dataInputStream, byte[] bleValue) {
-                                Log.i(TAG, "onReceived->" + dataInputStream + "---" + bleValue);
-                            }
-                        });
                     }
 
                     @Override
