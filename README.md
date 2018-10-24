@@ -5,13 +5,13 @@
 
 1.第一步，使用前先实例化HBluetooth（全局单例）,并且必须调用enableBluetooth()方法开启蓝牙功能：
  
- HBluetooth.getInstance(this).enableBluetooth()；
+               HBluetooth.getInstance(this).enableBluetooth()；
  
  
  
  2.开启蓝牙能力后，接着你就可以开始进行蓝牙设备扫描，其中，type 为蓝牙设备类型（蓝牙2.0或4.0）：
 
-HBluetooth.getInstance(this)
+               HBluetooth.getInstance(this)
                     .scanner()
                     .scan(type, new ScanCallBack() {
                 @Override
