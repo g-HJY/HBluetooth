@@ -1,0 +1,152 @@
+package com.hjy.test;
+
+import android.app.Activity;
+import android.os.Bundle;
+import android.os.Handler;
+import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ListView;
+
+import com.hjy.hardwarehost.HBluetooth;
+import com.hjy.hardwarehost.entity.BluetoothDevice;
+import com.hjy.hardwarehost.inter.ConnectCallBack;
+import com.hjy.hardwarehost.inter.ScanCallBack;
+import com.hjy.hardwarehost.inter.SendCallBack;
+
+import java.io.DataInputStream;
+import java.util.ArrayList;
+import java.util.List;
+
+public class MainActivity extends Activity implements View.OnClickListener, AdapterView.OnItemClickListener {
+
+    private final static String TAG = "mylog";
+
+    private ListView listView;
+    private List<BluetoothDevice> list = new ArrayList<>();
+    private MyAdapter adapter;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        findViewById(R.id.btn_scan_classic).setOnClickListener(this);
+        findViewById(R.id.btn_scan_ble).setOnClickListener(this);
+        findViewById(R.id.btn_disconnect).setOnClickListener(this);
+        listView = findViewById(R.id.listView);
+
+
+        adapter = new MyAdapter(this, list);
+        listView.setAdapter(adapter);
+        listView.setOnItemClickListener(this);
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        HBluetooth.getInstance(this).release();
+    }
+
+
+    @Override
+    public void onClick(View view) {
+        if(view.getId() == R.id.btn_disconnect){
+            HBluetooth.getInstance(MainActivity.this).release();
+        }else {
+            int type = 0;
+            if (view.getId() == R.id.btn_scan_classic) {
+                type = BluetoothDevice.DEVICE_TYPE_CLASSIC;
+            } else if (view.getId() == R.id.btn_scan_ble) {
+                type = BluetoothDevice.DEVICE_TYPE_LE;
+
+                //低功耗蓝牙扫描需要手动调用stopScan()方法停止扫描，否则会一直扫描下去
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        HBluetooth.getInstance(MainActivity.this)
+                                .scanner()
+                                .stopScan();
+                    }
+                }, 4000);
+            }
+
+            HBluetooth.getInstance(MainActivity.this)
+                    .enableBluetooth()
+                    .scan(type, new ScanCallBack() {
+                @Override
+                public void onScanStart() {
+                    Log.i(TAG, "开始扫描");
+                }
+
+                @Override
+                public void onScanning() {
+                    Log.i(TAG, "扫描中");
+                }
+
+                @Override
+                public void onError(int errorType, String errorMsg) {
+
+                }
+
+                @Override
+                public void onScanFinished(List<BluetoothDevice> bluetoothDevices) {
+                    Log.i(TAG, "扫描结束");
+                    if (bluetoothDevices != null && bluetoothDevices.size() > 0) {
+                        list.clear();
+                        list.addAll(bluetoothDevices);
+                        adapter.notifyDataSetChanged();
+                    }
+                }
+            });
+        }
+    }
+
+
+    @Override
+    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+        BluetoothDevice device = list.get(i);
+        HBluetooth.getInstance(MainActivity.this)
+                .connector()
+                .connect(device, new ConnectCallBack() {
+
+                    @Override
+                    public void onConnecting() {
+                        Log.i(TAG, "连接中...");
+                    }
+
+                    @Override
+                    public void onConnected() {
+                        Log.i(TAG, "连接成功");
+                        HBluetooth.getInstance(MainActivity.this).sender().send(new byte[]{0x01, 0x02}, new SendCallBack() {
+                            @Override
+                            public void onSending() {
+                                Log.i(TAG, "命令发送中...");
+                            }
+
+                            @Override
+                            public void onReceived(DataInputStream dataInputStream, byte[] bleValue) {
+                                Log.i(TAG, "onReceived->" + dataInputStream + "---" + bleValue);
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onDisConnecting() {
+                        Log.i(TAG, "断开连接中...");
+                    }
+
+                    @Override
+                    public void onDisConnected() {
+                        Log.i(TAG, "已断开连接");
+                    }
+
+                    @Override
+                    public void onError(int errorType, String errorMsg) {
+                        Log.i(TAG, "错误类型：" + errorType + " 错误原因：" + errorMsg);
+                    }
+                });
+    }
+}
