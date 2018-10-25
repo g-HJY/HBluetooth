@@ -23,6 +23,7 @@ Add it in your root build.gradle at the end of repositories:
  
 
 二.使用介绍
+
 1.第一步，使用前先实例化HBluetooth（全局单例）,并且必须调用enableBluetooth()方法开启蓝牙功能：
  
                HBluetooth.getInstance(this).enableBluetooth()；
