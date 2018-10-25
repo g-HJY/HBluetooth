@@ -1,8 +1,28 @@
 # HBluetooth
 封装了支持蓝牙2.0和4.0通信的库，以及该库使用例子。由于未经测试，目前该库仅供学习，后续将对该库进行维护升级。
 
+一.集成方式
 
+To get a Git project into your build:
+Step 1. Add the JitPack repository to your build file
 
+Add it in your root build.gradle at the end of repositories:
+
+	allprojects {
+		repositories {
+			...
+			maven { url 'https://jitpack.io' }
+		}
+	}
+ 
+ Step 2. Add the dependency
+
+	dependencies {
+	        implementation 'com.github.g-HJY:HBluetooth:Tag'
+	}
+ 
+
+二.使用介绍
 1.第一步，使用前先实例化HBluetooth（全局单例）,并且必须调用enableBluetooth()方法开启蓝牙功能：
  
                HBluetooth.getInstance(this).enableBluetooth()；
