@@ -95,7 +95,7 @@ Add it in your root build.gradle at the end of repositories:
             
             
             
-            3.一旦扫描到设备，你就可以找到目标设备并连接：
+3.一旦扫描到设备，你就可以找到目标设备并连接：
             
             HBluetooth.getInstance(this)
                 .connector()
@@ -128,7 +128,7 @@ Add it in your root build.gradle at the end of repositories:
                 });
                 
                 
-                4.设备连接成功后，你可以开始跟设备进行通信：
+ 4.设备连接成功后，你可以开始跟设备进行通信：
                
                HBluetooth.getInstance(this)
                                 .sender()
@@ -144,7 +144,7 @@ Add it in your root build.gradle at the end of repositories:
                             }
                         });
                         
-                5.最后，调用以下方法去主动断开连接并释放资源 ：
+ 5.最后，调用以下方法去主动断开连接并释放资源 ：
                 
                 HBluetooth.getInstance(this).release();
                 
