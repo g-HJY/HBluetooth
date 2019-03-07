@@ -1,5 +1,5 @@
 # HBluetooth
-封装了支持蓝牙2.0和4.0扫描，连接，以及通信的库。附带使用例子。改库后续会持续升级维护，敬请关注...
+封装了支持蓝牙2.0和4.0扫描，连接，以及通信的库。附带使用例子。该库后续会持续升级维护，敬请关注...
 
 一.集成方式
 
@@ -19,7 +19,7 @@ Add it in your root build.gradle at the end of repositories:
  Step 2. Add the dependency
 
 	dependencies {
-	        implementation 'com.github.g-HJY:HBluetooth:V1.0.0'
+	         implementation 'com.github.g-HJY:HBluetooth:1.0.1'
 	}
  
 
