@@ -93,9 +93,7 @@ public class BluetoothScanner extends Scanner {
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (scanCallBack != null) {
-                scanCallBack.onScanning();
-            }
+
             String action = intent.getAction();
 
             // When discovery finds a device
@@ -106,9 +104,9 @@ public class BluetoothScanner extends Scanner {
                 // new device found
                 BluetoothDevice bluetoothDevice = new BluetoothDevice();
                 if (device.getBondState() != android.bluetooth.BluetoothDevice.BOND_BONDED) {
-                    bluetoothDevice.setPaired(true);
-                } else {
                     bluetoothDevice.setPaired(false);
+                } else {
+                    bluetoothDevice.setPaired(true);
                 }
 
                 bluetoothDevice.setAddress(device.getAddress());
@@ -122,6 +120,10 @@ public class BluetoothScanner extends Scanner {
                     }
                 }
                 bluetoothDevices.add(bluetoothDevice);
+
+                if (scanCallBack != null) {
+                    scanCallBack.onScanning(bluetoothDevices,bluetoothDevice);
+                }
 
                 // When discovery is finished, change the Activity title
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
@@ -146,10 +148,13 @@ public class BluetoothScanner extends Scanner {
             device.setScanRecord(bytes);
 
             if (bluetoothDevices.contains(device)) {
-                bluetoothDevices.remove(device);
+                int index = bluetoothDevices.indexOf(device);
+                bluetoothDevices.set(index,device);
+            }else {
+                bluetoothDevices.add(device);
             }
 
-            bluetoothDevices.add(device);
+
             if (scanCallBack != null) {
                 new Handler(Looper.getMainLooper()).post(new Runnable() {
                     @Override

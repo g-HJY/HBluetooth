@@ -9,6 +9,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.hjy.hardwarehost.HBluetooth;
+import com.hjy.hardwarehost.abstra.Sender;
 import com.hjy.hardwarehost.entity.BluetoothDevice;
 import com.hjy.hardwarehost.inter.ConnectCallBack;
 import com.hjy.hardwarehost.inter.ScanCallBack;
@@ -26,6 +27,8 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
     private List<BluetoothDevice> list = new ArrayList<>();
     private MyAdapter adapter;
 
+    private HBluetooth mHBluetooth;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,6 +43,8 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
         adapter = new MyAdapter(this, list);
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(this);
+
+        mHBluetooth = HBluetooth.getInstance(this);
     }
 
 
@@ -47,15 +52,19 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
     protected void onDestroy() {
         super.onDestroy();
 
-        HBluetooth.getInstance(this).release();
+        mHBluetooth.release();
     }
 
 
     @Override
     public void onClick(View view) {
-        if(view.getId() == R.id.btn_disconnect){
-            HBluetooth.getInstance(MainActivity.this).release();
-        }else {
+        if (view.getId() == R.id.btn_disconnect) {
+            mHBluetooth.release();
+        } else {
+            if (list != null && list.size() > 0) {
+                list.clear();
+                adapter.notifyDataSetChanged();
+            }
             int type = 0;
             if (view.getId() == R.id.btn_scan_classic) {
                 type = BluetoothDevice.DEVICE_TYPE_CLASSIC;
@@ -66,41 +75,45 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        HBluetooth.getInstance(MainActivity.this)
-                                .scanner()
-                                .stopScan();
+                        mHBluetooth.scanner().stopScan();
                     }
-                }, 4000);
+                }, 10000);
             }
 
-            HBluetooth.getInstance(MainActivity.this)
-                    .enableBluetooth()
+
+            mHBluetooth.enableBluetooth()
                     .scan(type, new ScanCallBack() {
-                @Override
-                public void onScanStart() {
-                    Log.i(TAG, "开始扫描");
-                }
+                        @Override
+                        public void onScanStart() {
+                            Log.i(TAG, "开始扫描");
+                        }
 
-                @Override
-                public void onScanning() {
-                    Log.i(TAG, "扫描中");
-                }
+                        @Override
+                        public void onScanning(List<BluetoothDevice> scannedDevices, BluetoothDevice currentScannedDevice) {
+                            Log.i(TAG, "扫描中");
+                            if (scannedDevices != null && scannedDevices.size() > 0) {
+                                list.clear();
+                                list.addAll(scannedDevices);
+                                adapter.notifyDataSetChanged();
+                            }
+                        }
 
-                @Override
-                public void onError(int errorType, String errorMsg) {
 
-                }
+                        @Override
+                        public void onError(int errorType, String errorMsg) {
 
-                @Override
-                public void onScanFinished(List<BluetoothDevice> bluetoothDevices) {
-                    Log.i(TAG, "扫描结束");
-                    if (bluetoothDevices != null && bluetoothDevices.size() > 0) {
-                        list.clear();
-                        list.addAll(bluetoothDevices);
-                        adapter.notifyDataSetChanged();
-                    }
-                }
-            });
+                        }
+
+                        @Override
+                        public void onScanFinished(List<BluetoothDevice> bluetoothDevices) {
+                            Log.i(TAG, "扫描结束");
+                            if (bluetoothDevices != null && bluetoothDevices.size() > 0) {
+                                list.clear();
+                                list.addAll(bluetoothDevices);
+                                adapter.notifyDataSetChanged();
+                            }
+                        }
+                    });
         }
     }
 
@@ -108,8 +121,8 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
         BluetoothDevice device = list.get(i);
-        HBluetooth.getInstance(MainActivity.this)
-                .connector()
+
+        mHBluetooth.connector()
                 .connect(device, new ConnectCallBack() {
 
                     @Override
@@ -118,9 +131,9 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
                     }
 
                     @Override
-                    public void onConnected() {
+                    public void onConnected(Sender sender) {
                         Log.i(TAG, "连接成功");
-                        HBluetooth.getInstance(MainActivity.this).sender().send(new byte[]{0x01, 0x02}, new SendCallBack() {
+                        sender.send(new byte[]{0x01, 0x02}, new SendCallBack() {
                             @Override
                             public void onSending() {
                                 Log.i(TAG, "命令发送中...");

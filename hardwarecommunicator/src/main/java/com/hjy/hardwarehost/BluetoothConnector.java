@@ -14,6 +14,7 @@ import android.content.IntentFilter;
 import android.os.AsyncTask;
 
 import com.hjy.hardwarehost.abstra.Connector;
+import com.hjy.hardwarehost.abstra.Sender;
 import com.hjy.hardwarehost.async.BluetoothConnectAsyncTask;
 import com.hjy.hardwarehost.constant.BluetoothState;
 import com.hjy.hardwarehost.inter.ConnectCallBack;
@@ -44,16 +45,17 @@ public class BluetoothConnector extends Connector {
 
 
     @Override
-    public synchronized void connect(com.hjy.hardwarehost.entity.BluetoothDevice device, ConnectCallBack connectCallBack) {
+    public synchronized void connect(com.hjy.hardwarehost.entity.BluetoothDevice device, final ConnectCallBack connectCallBack) {
         this.connectCallBack = connectCallBack;
         cancelConnectAsyncTask();
+        HBluetooth hBluetooth = HBluetooth.getInstance(mContext);
+        hBluetooth.destroyChannel();
+        hBluetooth.cancelScan();
 
         final BluetoothDevice remoteDevice = bluetoothAdapter.getRemoteDevice(device.getAddress());
 
         if (device.getType() == BluetoothDevice.DEVICE_TYPE_CLASSIC) { //Classic Bluetooth Type.
-            final boolean[] paired = {true};
             if (remoteDevice.getBondState() != BluetoothDevice.BOND_BONDED) { //If no paired,register a broadcast to paired.
-                paired[0] = false;
                 /*增加自动配对功能*/
                 IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_PAIRING_REQUEST);
                 mContext.registerReceiver(new BroadcastReceiver() {
@@ -70,37 +72,23 @@ public class BluetoothConnector extends Connector {
                                 //context.unregisterReceiver(this);
                                 /*配对成功，中断广播的继续传递*/
                                 abortBroadcast();
-                                paired[0] = true;
                             } catch (Exception e) {
                                 e.printStackTrace();
-                                paired[0] = false;
+                                if (connectCallBack != null) {
+                                    connectCallBack.onError(BluetoothState.PAIRED_FAILED, "自动配对失败，请手动配对");
+                                }
                             }
                         }
                     }
                 }, filter);
             }
 
-            if (paired[0]) { //Paired success
-                HBluetooth.getInstance(mContext).destroyChannel(); //Release resources if has been used.
-                connectAsyncTask = new BluetoothConnectAsyncTask(mContext, remoteDevice, this.connectCallBack);
-                connectAsyncTask.execute();
-            } else {
-                if (this.connectCallBack != null) {
-                    this.connectCallBack.onError(BluetoothState.PAIRED_FAILED, "配对失败");
-                }
-
-            }
+            connectAsyncTask = new BluetoothConnectAsyncTask(mContext, remoteDevice, this.connectCallBack);
+            connectAsyncTask.execute();
 
         } else if (device.getType() == BluetoothDevice.DEVICE_TYPE_LE) { //BLE Type.
 
-            BluetoothSender sender = (BluetoothSender) HBluetooth.getInstance(mContext).sender();
-            if (sender != null) {
-                sender.destroyChannel(); //Release resources if has been used.
-                BluetoothGatt gatt = remoteDevice.connectGatt(mContext, false, bluetoothGattCallback);
-                sender.setConnector(this).initChannel(gatt, BluetoothDevice.DEVICE_TYPE_LE);
-            }
-
-
+            remoteDevice.connectGatt(mContext, false, bluetoothGattCallback);
         }
     }
 
@@ -121,9 +109,15 @@ public class BluetoothConnector extends Connector {
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             super.onConnectionStateChange(gatt, status, newState);
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                HBluetooth.getInstance(mContext).sender().discoverServices();
+                Sender sender = HBluetooth.getInstance(mContext).sender();
+                if (sender != null) {
+                    BluetoothSender bluetoothSender = (BluetoothSender) sender;
+                    bluetoothSender.setConnector(BluetoothConnector.this).initChannel(gatt, BluetoothDevice.DEVICE_TYPE_LE);
+                    bluetoothSender.discoverServices();
+                }
+
                 if (connectCallBack != null) {
-                    connectCallBack.onConnected();
+                    connectCallBack.onConnected(sender);
                 }
 
             } else if (newState == BluetoothProfile.STATE_CONNECTING) {

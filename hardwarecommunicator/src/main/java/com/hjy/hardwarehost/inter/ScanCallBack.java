@@ -11,7 +11,7 @@ public interface ScanCallBack {
 
     void onScanStart();
 
-    void onScanning();
+    void onScanning(List<BluetoothDevice> scannedDevices,BluetoothDevice currentScannedDevice);
 
     void onError(int errorType,String errorMsg);
 

@@ -12,6 +12,7 @@ import android.os.Handler;
 import android.os.Looper;
 
 import com.hjy.hardwarehost.HBluetooth;
+import com.hjy.hardwarehost.abstra.Sender;
 import com.hjy.hardwarehost.constant.BluetoothState;
 import com.hjy.hardwarehost.inter.ConnectCallBack;
 
@@ -29,6 +30,7 @@ public class BluetoothConnectAsyncTask extends AsyncTask<Void, Void, Integer> {
     private BluetoothDevice bluetoothDevice;
     private ConnectCallBack connectCallBack;
     private Context mContext;
+    private Sender sender;
 
     public BluetoothConnectAsyncTask(Context context, BluetoothDevice bluetoothDevice, ConnectCallBack connectCallBack) {
         this.bluetoothDevice = bluetoothDevice;
@@ -56,7 +58,6 @@ public class BluetoothConnectAsyncTask extends AsyncTask<Void, Void, Integer> {
     protected Integer doInBackground(Void... voids) {
 
         if (bluetoothSocket != null) {
-            HBluetooth.getInstance(mContext).cancelScan(); //If was scanning,stop it.
 
             new Handler(Looper.getMainLooper()).post(new Runnable() {
                 @Override
@@ -84,7 +85,10 @@ public class BluetoothConnectAsyncTask extends AsyncTask<Void, Void, Integer> {
             }
 
             if (bluetoothSocket.isConnected()) {
-                HBluetooth.getInstance(mContext).sender().initChannel(bluetoothSocket, BluetoothDevice.DEVICE_TYPE_CLASSIC);
+                sender = HBluetooth.getInstance(mContext).sender();
+                if(sender != null){
+                    sender.initChannel(bluetoothSocket, BluetoothDevice.DEVICE_TYPE_CLASSIC);
+                }
                 return BluetoothState.CONNECT_SUCCESS;
             }
 
@@ -108,7 +112,7 @@ public class BluetoothConnectAsyncTask extends AsyncTask<Void, Void, Integer> {
                 IntentFilter filter = new IntentFilter();
                 filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
                 mContext.registerReceiver(mReceiver, filter);
-                this.connectCallBack.onConnected();
+                this.connectCallBack.onConnected(sender);
             } else {
                 this.connectCallBack.onError(BluetoothState.CONNECT_FAIL, "连接失败");
             }
