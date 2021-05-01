@@ -1,10 +1,10 @@
-package com.hjy.hardwarehost;
+package com.hjy.hardwarehost.operator.impl;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothSocket;
 
-import com.hjy.hardwarehost.abstra.Sender;
+import com.hjy.hardwarehost.operator.abstra.Sender;
 import com.hjy.hardwarehost.entity.BluetoothDevice;
 import com.hjy.hardwarehost.inter.SendCallBack;
 import com.hjy.hardwarehost.utils.LockStore;

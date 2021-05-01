@@ -1,5 +1,6 @@
 package com.hjy.hardwarehost.async;
 
+import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
@@ -12,7 +13,7 @@ import android.os.Handler;
 import android.os.Looper;
 
 import com.hjy.hardwarehost.HBluetooth;
-import com.hjy.hardwarehost.abstra.Sender;
+import com.hjy.hardwarehost.operator.abstra.Sender;
 import com.hjy.hardwarehost.constant.BluetoothState;
 import com.hjy.hardwarehost.inter.ConnectCallBack;
 
@@ -24,15 +25,17 @@ import java.lang.reflect.Method;
  * Created by _H_JY on 2018/10/22.
  * Connected thread for classic bluetooth.
  */
-public class BluetoothConnectAsyncTask extends AsyncTask<Void, Void, Integer> {
+public class BluetoothConnectAsyncTask extends WeakAsyncTask<Void, Void, Integer, Context> {
 
     private BluetoothSocket bluetoothSocket;
     private BluetoothDevice bluetoothDevice;
     private ConnectCallBack connectCallBack;
     private Context mContext;
     private Sender sender;
+    private Handler handler;
 
     public BluetoothConnectAsyncTask(Context context, BluetoothDevice bluetoothDevice, ConnectCallBack connectCallBack) {
+        super(context);
         this.bluetoothDevice = bluetoothDevice;
         this.mContext = context;
         this.connectCallBack = connectCallBack;
@@ -55,11 +58,14 @@ public class BluetoothConnectAsyncTask extends AsyncTask<Void, Void, Integer> {
     }
 
     @Override
-    protected Integer doInBackground(Void... voids) {
+    protected Integer doInBackground(Context context,Void... voids) {
 
         if (bluetoothSocket != null) {
 
-            new Handler(Looper.getMainLooper()).post(new Runnable() {
+            if(handler == null){
+                handler = new Handler(Looper.getMainLooper());
+            }
+            handler.post(new Runnable() {
                 @Override
                 public void run() {
                     if (connectCallBack != null) {
@@ -81,7 +87,6 @@ public class BluetoothConnectAsyncTask extends AsyncTask<Void, Void, Integer> {
                         e1.printStackTrace();
                     }
                 }
-
             }
 
             if (bluetoothSocket.isConnected()) {
@@ -98,7 +103,7 @@ public class BluetoothConnectAsyncTask extends AsyncTask<Void, Void, Integer> {
     }
 
     @Override
-    protected void onPostExecute(Integer result) {
+    protected void onPostExecute(Context context,Integer result) {
         super.onPostExecute(result);
         if (this.connectCallBack != null) {
             if (result == BluetoothState.CONNECT_SUCCESS) {

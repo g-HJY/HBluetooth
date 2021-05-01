@@ -4,10 +4,13 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 
-import com.hjy.hardwarehost.abstra.Connector;
-import com.hjy.hardwarehost.abstra.Scanner;
-import com.hjy.hardwarehost.abstra.Sender;
+import com.hjy.hardwarehost.operator.abstra.Connector;
+import com.hjy.hardwarehost.operator.abstra.Scanner;
+import com.hjy.hardwarehost.operator.abstra.Sender;
 import com.hjy.hardwarehost.inter.ScanCallBack;
+import com.hjy.hardwarehost.operator.impl.BluetoothConnector;
+import com.hjy.hardwarehost.operator.impl.BluetoothScanner;
+import com.hjy.hardwarehost.operator.impl.BluetoothSender;
 
 import java.util.Set;
 
@@ -25,7 +28,7 @@ public class HBluetooth {
     private Connector connector;
     private Sender sender;
 
-    public HBluetooth(Context context) {
+    private HBluetooth(Context context) {
         this.mContext = context;
     }
 

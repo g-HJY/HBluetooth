@@ -1,6 +1,6 @@
 package com.hjy.hardwarehost.inter;
 
-import com.hjy.hardwarehost.abstra.Sender;
+import com.hjy.hardwarehost.operator.abstra.Sender;
 
 /**
  * Created by _H_JY on 2018/10/20.

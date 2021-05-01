@@ -1,4 +1,4 @@
-package com.hjy.hardwarehost.abstra;
+package com.hjy.hardwarehost.operator.abstra;
 
 import com.hjy.hardwarehost.inter.ScanCallBack;
 

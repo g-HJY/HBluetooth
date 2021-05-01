@@ -9,7 +9,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.hjy.hardwarehost.HBluetooth;
-import com.hjy.hardwarehost.abstra.Sender;
+import com.hjy.hardwarehost.operator.abstra.Sender;
 import com.hjy.hardwarehost.entity.BluetoothDevice;
 import com.hjy.hardwarehost.inter.ConnectCallBack;
 import com.hjy.hardwarehost.inter.ScanCallBack;
@@ -162,4 +162,6 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
                     }
                 });
     }
+
+
 }

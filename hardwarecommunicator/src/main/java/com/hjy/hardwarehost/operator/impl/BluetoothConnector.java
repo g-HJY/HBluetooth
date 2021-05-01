@@ -1,4 +1,4 @@
-package com.hjy.hardwarehost;
+package com.hjy.hardwarehost.operator.impl;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -13,8 +13,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.AsyncTask;
 
-import com.hjy.hardwarehost.abstra.Connector;
-import com.hjy.hardwarehost.abstra.Sender;
+import com.hjy.hardwarehost.HBluetooth;
+import com.hjy.hardwarehost.operator.abstra.Connector;
+import com.hjy.hardwarehost.operator.abstra.Sender;
 import com.hjy.hardwarehost.async.BluetoothConnectAsyncTask;
 import com.hjy.hardwarehost.constant.BluetoothState;
 import com.hjy.hardwarehost.inter.ConnectCallBack;

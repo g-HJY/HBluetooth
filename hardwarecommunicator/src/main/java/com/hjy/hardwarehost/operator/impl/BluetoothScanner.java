@@ -1,4 +1,4 @@
-package com.hjy.hardwarehost;
+package com.hjy.hardwarehost.operator.impl;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
@@ -9,7 +9,7 @@ import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.Looper;
 
-import com.hjy.hardwarehost.abstra.Scanner;
+import com.hjy.hardwarehost.operator.abstra.Scanner;
 import com.hjy.hardwarehost.entity.BluetoothDevice;
 import com.hjy.hardwarehost.inter.ScanCallBack;
 
@@ -26,6 +26,7 @@ public class BluetoothScanner extends Scanner {
     private ScanCallBack scanCallBack;
     private List<BluetoothDevice> bluetoothDevices;
     private BluetoothAdapter bluetoothAdapter;
+    private Handler handler;
 
     public BluetoothScanner() {
     }
@@ -156,7 +157,10 @@ public class BluetoothScanner extends Scanner {
 
 
             if (scanCallBack != null) {
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                if(handler == null){
+                   handler = new Handler(Looper.getMainLooper());
+                }
+                handler.post(new Runnable() {
                     @Override
                     public void run() {
                         scanCallBack.onScanFinished(bluetoothDevices);
