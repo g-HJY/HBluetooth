@@ -126,8 +126,9 @@ public class HBluetooth {
         return writeCharacteristicUUID;
     }
 
-    public void setWriteCharacteristicUUID(String writeCharacteristicUUID) {
+    public HBluetooth setWriteCharacteristicUUID(String writeCharacteristicUUID) {
         this.writeCharacteristicUUID = writeCharacteristicUUID;
+        return this;
     }
 
     /**
