@@ -47,18 +47,24 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
         listView.setOnItemClickListener(this);
 
         mHBluetooth = HBluetooth.getInstance(this);
-        //设置MTU扩容
-        mHBluetooth.setMtu(500, new BleMtuChangedCallback() {
-            @Override
-            public void onSetMTUFailure(int realMtuSize,BleException bleException) {
-                Log.i(TAG, "bleException:" + bleException.getMessage()+"  realMtuSize:"+realMtuSize);
-            }
 
-            @Override
-            public void onMtuChanged() {
+        mHBluetooth
+                //开启蓝牙功能
+                .enableBluetooth()
+                //低功耗蓝牙才需要设置，传入你自己的UUID
+                .setWriteCharacteristicUUID("0000fe61-0000-1000-8000-00805f9b34fb")
+                //设置MTU扩容
+                .setMtu(500, new BleMtuChangedCallback() {
+                    @Override
+                    public void onSetMTUFailure(int realMtuSize, BleException bleException) {
+                        Log.i(TAG, "bleException:" + bleException.getMessage() + "  realMtuSize:" + realMtuSize);
+                    }
 
-            }
-        }).setWriteCharacteristicUUID("0000fe61-0000-1000-8000-00805f9b34fb");
+                    @Override
+                    public void onMtuChanged() {
+
+                    }
+                });
     }
 
 
@@ -95,39 +101,38 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
             }
 
 
-            mHBluetooth.enableBluetooth()
-                    .scan(type, new ScanCallBack() {
-                        @Override
-                        public void onScanStart() {
-                            Log.i(TAG, "开始扫描");
-                        }
+            mHBluetooth.scan(type, new ScanCallBack() {
+                @Override
+                public void onScanStart() {
+                    Log.i(TAG, "开始扫描");
+                }
 
-                        @Override
-                        public void onScanning(List<BluetoothDevice> scannedDevices, BluetoothDevice currentScannedDevice) {
-                            Log.i(TAG, "扫描中");
-                            if (scannedDevices != null && scannedDevices.size() > 0) {
-                                list.clear();
-                                list.addAll(scannedDevices);
-                                adapter.notifyDataSetChanged();
-                            }
-                        }
+                @Override
+                public void onScanning(List<BluetoothDevice> scannedDevices, BluetoothDevice currentScannedDevice) {
+                    Log.i(TAG, "扫描中");
+                    if (scannedDevices != null && scannedDevices.size() > 0) {
+                        list.clear();
+                        list.addAll(scannedDevices);
+                        adapter.notifyDataSetChanged();
+                    }
+                }
 
 
-                        @Override
-                        public void onError(int errorType, String errorMsg) {
+                @Override
+                public void onError(int errorType, String errorMsg) {
 
-                        }
+                }
 
-                        @Override
-                        public void onScanFinished(List<BluetoothDevice> bluetoothDevices) {
-                            Log.i(TAG, "扫描结束");
-                            if (bluetoothDevices != null && bluetoothDevices.size() > 0) {
-                                list.clear();
-                                list.addAll(bluetoothDevices);
-                                adapter.notifyDataSetChanged();
-                            }
-                        }
-                    });
+                @Override
+                public void onScanFinished(List<BluetoothDevice> bluetoothDevices) {
+                    Log.i(TAG, "扫描结束");
+                    if (bluetoothDevices != null && bluetoothDevices.size() > 0) {
+                        list.clear();
+                        list.addAll(bluetoothDevices);
+                        adapter.notifyDataSetChanged();
+                    }
+                }
+            });
         }
     }
 

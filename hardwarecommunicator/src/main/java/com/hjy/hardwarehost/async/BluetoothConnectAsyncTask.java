@@ -90,7 +90,7 @@ public class BluetoothConnectAsyncTask extends WeakAsyncTask<Void, Void, Integer
             if (bluetoothSocket.isConnected()) {
                 sender = HBluetooth.getInstance(mContext).sender();
                 if(sender != null){
-                    sender.initChannel(bluetoothSocket, BluetoothDevice.DEVICE_TYPE_CLASSIC);
+                    sender.initChannel(bluetoothSocket, BluetoothDevice.DEVICE_TYPE_CLASSIC,connectCallBack);
                 }
                 return BluetoothState.CONNECT_SUCCESS;
             }

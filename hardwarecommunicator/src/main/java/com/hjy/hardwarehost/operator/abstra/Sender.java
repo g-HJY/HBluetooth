@@ -1,5 +1,6 @@
 package com.hjy.hardwarehost.operator.abstra;
 
+import com.hjy.hardwarehost.inter.ConnectCallBack;
 import com.hjy.hardwarehost.inter.SendCallBack;
 
 /**
@@ -9,7 +10,7 @@ public abstract class Sender {
 
     public abstract void send(byte[] command, SendCallBack sendCallBack);
 
-    public abstract <T> T initChannel(T o, int type);
+    public abstract <T> T initChannel(T o, int type, ConnectCallBack connectCallBack);
 
     public abstract void discoverServices();
 

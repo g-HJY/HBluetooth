@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothSocket;
 
 import com.hjy.hardwarehost.entity.BluetoothDevice;
+import com.hjy.hardwarehost.inter.ConnectCallBack;
 import com.hjy.hardwarehost.inter.SendCallBack;
 import com.hjy.hardwarehost.operator.abstra.Sender;
 import com.hjy.hardwarehost.utils.LockStore;
@@ -23,6 +24,7 @@ public class BluetoothSender extends Sender {
     private              BluetoothGatt               mGatt;
     private              BluetoothGattCharacteristic characteristic;
     private              BluetoothConnector          connector;
+    private              ConnectCallBack             connectCallBack;
     private              int                         type;
     private final static String                      LOCK_NAME = "SendCmdLock";
 
@@ -84,14 +86,17 @@ public class BluetoothSender extends Sender {
             try {
                 mSocket.close();
                 mSocket = null;
+                if(connectCallBack != null){
+                    connectCallBack.onDisConnected();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
         if (mGatt != null) {
-            mGatt.close();
-            mGatt = null;
+            //这里调用disconnect后会到onConnectionStateChange，再调gatt.close()释放资源
+            mGatt.disconnect();
         }
 
     }
@@ -170,7 +175,8 @@ public class BluetoothSender extends Sender {
     }
 
     @Override
-    public <T> T initChannel(T o, int type) {
+    public <T> T initChannel(T o, int type, ConnectCallBack connectCallBack) {
+        this.connectCallBack = connectCallBack;
         if (o instanceof BluetoothSocket) {
             this.type = BluetoothDevice.DEVICE_TYPE_CLASSIC;
             return (T) (mSocket = (BluetoothSocket) o);

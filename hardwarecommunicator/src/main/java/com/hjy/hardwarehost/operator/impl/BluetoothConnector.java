@@ -117,7 +117,7 @@ public class BluetoothConnector extends Connector {
                 Sender sender = HBluetooth.getInstance(mContext).sender();
                 if (sender != null) {
                     BluetoothSender bluetoothSender = (BluetoothSender) sender;
-                    bluetoothSender.setConnector(BluetoothConnector.this).initChannel(gatt, BluetoothDevice.DEVICE_TYPE_LE);
+                    bluetoothSender.setConnector(BluetoothConnector.this).initChannel(gatt, BluetoothDevice.DEVICE_TYPE_LE,connectCallBack);
                     bluetoothSender.discoverServices();
                 }
 
@@ -131,6 +131,9 @@ public class BluetoothConnector extends Connector {
                 }
 
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                if(gatt != null){
+                    gatt.close();
+                }
                 if (connectCallBack != null) {
                     connectCallBack.onDisConnected();
                 }
