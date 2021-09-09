@@ -9,13 +9,13 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.hjy.hardwarehost.HBluetooth;
+import com.hjy.hardwarehost.entity.BluetoothDevice;
 import com.hjy.hardwarehost.exception.BleException;
 import com.hjy.hardwarehost.inter.BleMtuChangedCallback;
-import com.hjy.hardwarehost.operator.abstra.Sender;
-import com.hjy.hardwarehost.entity.BluetoothDevice;
 import com.hjy.hardwarehost.inter.ConnectCallBack;
 import com.hjy.hardwarehost.inter.ScanCallBack;
 import com.hjy.hardwarehost.inter.SendCallBack;
+import com.hjy.hardwarehost.operator.abstra.Sender;
 
 import java.io.DataInputStream;
 import java.util.ArrayList;

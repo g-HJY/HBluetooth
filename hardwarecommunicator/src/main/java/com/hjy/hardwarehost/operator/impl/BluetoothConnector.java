@@ -33,11 +33,11 @@ import java.util.List;
  */
 public class BluetoothConnector extends Connector {
 
-    private Context mContext;
-    private BluetoothAdapter bluetoothAdapter;
+    private Context                   mContext;
+    private BluetoothAdapter          bluetoothAdapter;
     private BluetoothConnectAsyncTask connectAsyncTask;
-    private ConnectCallBack connectCallBack;
-    private SendCallBack sendCallBack;
+    private ConnectCallBack           connectCallBack;
+    private SendCallBack              sendCallBack;
 
 
     public BluetoothConnector() {
@@ -117,7 +117,7 @@ public class BluetoothConnector extends Connector {
                 Sender sender = HBluetooth.getInstance(mContext).sender();
                 if (sender != null) {
                     BluetoothSender bluetoothSender = (BluetoothSender) sender;
-                    bluetoothSender.setConnector(BluetoothConnector.this).initChannel(gatt, BluetoothDevice.DEVICE_TYPE_LE,connectCallBack);
+                    bluetoothSender.setConnector(BluetoothConnector.this).initChannel(gatt, BluetoothDevice.DEVICE_TYPE_LE, connectCallBack);
                     bluetoothSender.discoverServices();
                 }
 
@@ -131,7 +131,7 @@ public class BluetoothConnector extends Connector {
                 }
 
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                if(gatt != null){
+                if (gatt != null) {
                     gatt.close();
                 }
                 if (connectCallBack != null) {
@@ -160,7 +160,7 @@ public class BluetoothConnector extends Connector {
             }
 
             String writeCharacteristicUUID = HBluetooth.getInstance(mContext).getWriteCharacteristicUUID();
-            if(TextUtils.isEmpty(writeCharacteristicUUID)){
+            if (TextUtils.isEmpty(writeCharacteristicUUID)) {
                 writeCharacteristicUUID = "0000ffe1-0000-1000-8000-00805f9b34fb";
             }
 
@@ -189,11 +189,11 @@ public class BluetoothConnector extends Connector {
 
             int mtuSize = HBluetooth.getInstance(mContext).getMtuSize();
             BleMtuChangedCallback callback = HBluetooth.getInstance(mContext).getBleMtuChangedCallback();
-            if(callback != null){
+            if (callback != null) {
                 if (BluetoothGatt.GATT_SUCCESS == status && mtuSize == mtu) {
                     callback.onMtuChanged();
                 } else {
-                    callback.onSetMTUFailure(mtu,new BleException("MTU change fail!"));
+                    callback.onSetMTUFailure(mtu, new BleException("MTU change fail!"));
                 }
             }
 
