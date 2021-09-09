@@ -47,6 +47,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
         listView.setOnItemClickListener(this);
 
         mHBluetooth = HBluetooth.getInstance(this);
+        //设置MTU扩容
         mHBluetooth.setMtu(500, new BleMtuChangedCallback() {
             @Override
             public void onSetMTUFailure(int realMtuSize,BleException bleException) {
