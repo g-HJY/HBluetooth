@@ -61,7 +61,7 @@ public class BluetoothConnector extends Connector {
 
         if (device.getType() == BluetoothDevice.DEVICE_TYPE_CLASSIC) { //Classic Bluetooth Type.
             if (remoteDevice.getBondState() != BluetoothDevice.BOND_BONDED) { //If no paired,register a broadcast to paired.
-                /*增加自动配对功能*/
+                /*Add automatic pairing*/
                 IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_PAIRING_REQUEST);
                 mContext.registerReceiver(new BroadcastReceiver() {
                     @Override
@@ -75,12 +75,12 @@ public class BluetoothConnector extends Connector {
                                 remoteDevice.getClass().getMethod("setPairingConfirmation", boolean.class).invoke(remoteDevice, true);
                                 System.out.println("PAIRED !");
                                 //context.unregisterReceiver(this);
-                                /*配对成功，中断广播的继续传递*/
+                                /*Paired successfully，interrupt broadcast*/
                                 abortBroadcast();
                             } catch (Exception e) {
                                 e.printStackTrace();
                                 if (connectCallBack != null) {
-                                    connectCallBack.onError(BluetoothState.PAIRED_FAILED, "自动配对失败，请手动配对");
+                                    connectCallBack.onError(BluetoothState.PAIRED_FAILED, "Automatic pairing failed, please pair manually.");
                                 }
                             }
                         }
@@ -114,7 +114,9 @@ public class BluetoothConnector extends Connector {
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             super.onConnectionStateChange(gatt, status, newState);
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                Sender sender = HBluetooth.getInstance(mContext).sender();
+                HBluetooth hBluetooth = HBluetooth.getInstance(mContext);
+                hBluetooth.setConnected(true);
+                Sender sender = hBluetooth.sender();
                 if (sender != null) {
                     BluetoothSender bluetoothSender = (BluetoothSender) sender;
                     bluetoothSender.setConnector(BluetoothConnector.this).initChannel(gatt, BluetoothDevice.DEVICE_TYPE_LE, connectCallBack);
@@ -131,6 +133,7 @@ public class BluetoothConnector extends Connector {
                 }
 
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                HBluetooth.getInstance(mContext).setConnected(false);
                 if (gatt != null) {
                     gatt.close();
                 }
@@ -150,8 +153,8 @@ public class BluetoothConnector extends Connector {
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             super.onServicesDiscovered(gatt, status);
 
-            //软件层面，Android API版本>=21（Android 5.0），才支持设置MTU。
-            //硬件层面，蓝牙4.2及以上的模块，才支持设置MTU。
+            //At the software level, MTU setting is supported only when Android API version > = 21 (Android 5.0).
+            //At the hardware level, only modules with Bluetooth 4.2 and above can support the setting of MTU.
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 int mtuSize = HBluetooth.getInstance(mContext).getMtuSize();
                 if (mtuSize > 23 && mtuSize < 512) {
@@ -191,9 +194,9 @@ public class BluetoothConnector extends Connector {
             BleMtuChangedCallback callback = HBluetooth.getInstance(mContext).getBleMtuChangedCallback();
             if (callback != null) {
                 if (BluetoothGatt.GATT_SUCCESS == status && mtuSize == mtu) {
-                    callback.onMtuChanged();
+                    callback.onMtuChanged(mtu);
                 } else {
-                    callback.onSetMTUFailure(mtu, new BleException("MTU change fail!"));
+                    callback.onSetMTUFailure(mtu, new BleException("MTU change failed!"));
                 }
             }
 

@@ -87,8 +87,10 @@ public class BluetoothConnectAsyncTask extends WeakAsyncTask<Void, Void, Integer
                 }
             }
 
+            HBluetooth hBluetooth = HBluetooth.getInstance(mContext);
+            hBluetooth.setConnected(bluetoothSocket.isConnected());
             if (bluetoothSocket.isConnected()) {
-                sender = HBluetooth.getInstance(mContext).sender();
+                sender = hBluetooth.sender();
                 if(sender != null){
                     sender.initChannel(bluetoothSocket, BluetoothDevice.DEVICE_TYPE_CLASSIC,connectCallBack);
                 }
@@ -117,7 +119,7 @@ public class BluetoothConnectAsyncTask extends WeakAsyncTask<Void, Void, Integer
                 mContext.registerReceiver(mReceiver, filter);
                 this.connectCallBack.onConnected(sender);
             } else {
-                this.connectCallBack.onError(BluetoothState.CONNECT_FAIL, "连接失败");
+                this.connectCallBack.onError(BluetoothState.CONNECT_FAIL, "Connect failed!");
             }
         }
     }
@@ -127,6 +129,7 @@ public class BluetoothConnectAsyncTask extends WeakAsyncTask<Void, Void, Integer
         @Override
         public void onReceive(Context context, Intent intent) {
             if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(intent.getAction())) {
+                HBluetooth.getInstance(mContext).setConnected(false);
                 if (connectCallBack != null) {
                     connectCallBack.onDisConnected();
                 }

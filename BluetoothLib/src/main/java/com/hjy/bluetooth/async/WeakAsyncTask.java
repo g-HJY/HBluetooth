@@ -5,7 +5,7 @@ import android.os.AsyncTask;
 import java.lang.ref.WeakReference;
 
 /**
- * Created by ply on 2018/2/12.
+ * Created by _H_JY on 2018/2/12.
  */
 
 public abstract class WeakAsyncTask<Params, Progress, Result, WeakTarget>

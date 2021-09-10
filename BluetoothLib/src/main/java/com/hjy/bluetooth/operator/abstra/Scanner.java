@@ -7,7 +7,9 @@ import com.hjy.bluetooth.inter.ScanCallBack;
  */
 public abstract class Scanner {
 
-    public abstract void scan(int scanType,ScanCallBack scanCallBack);
+    public abstract void scan(int scanType, ScanCallBack scanCallBack);
+
+    public abstract void scan(int scanType, int timeUse, ScanCallBack scanCallBack);
 
     public abstract void stopScan();
 

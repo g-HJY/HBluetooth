@@ -33,6 +33,7 @@ public class HBluetooth {
     private Scanner               scanner;
     private Connector             connector;
     private Sender                sender;
+    private boolean               isConnected;
     private int                   mtuSize;
     private BleMtuChangedCallback mBleMtuChangedCallback;
     private String                writeCharacteristicUUID;
@@ -93,6 +94,12 @@ public class HBluetooth {
         }
     }
 
+    public void scan(@BluetoothType int scanType, int timeUse, ScanCallBack scanCallBack) {
+        if (scanner != null) {
+            scanner.scan(scanType, timeUse, scanCallBack);
+        }
+    }
+
 
     public Scanner scanner() {
         if (mAdapter == null || !mAdapter.isEnabled()) {
@@ -138,6 +145,14 @@ public class HBluetooth {
     public HBluetooth setWriteCharacteristicUUID(String writeCharacteristicUUID) {
         this.writeCharacteristicUUID = writeCharacteristicUUID;
         return this;
+    }
+
+    public boolean isConnected() {
+        return isConnected;
+    }
+
+    public void setConnected(boolean connected) {
+        isConnected = connected;
     }
 
     /**

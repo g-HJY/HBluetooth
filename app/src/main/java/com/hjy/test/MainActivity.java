@@ -61,7 +61,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
                     }
 
                     @Override
-                    public void onMtuChanged() {
+                    public void onMtuChanged(int mtuSize) {
 
                     }
                 });
@@ -91,48 +91,55 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
             } else if (view.getId() == R.id.btn_scan_ble) {
                 type = BluetoothDevice.DEVICE_TYPE_LE;
 
-                //低功耗蓝牙扫描需要手动调用stopScan()方法停止扫描，否则会一直扫描下去
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        mHBluetooth.scanner().stopScan();
-                    }
-                }, 10000);
+                //如果没有设置扫描时间，低功耗蓝牙扫描需要手动调用stopScan()方法停止扫描，否则会一直扫描下去
+//                new Handler().postDelayed(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        mHBluetooth.scanner().stopScan();
+//                    }
+//                }, 10000);
             }
 
-
-            mHBluetooth.scan(type, new ScanCallBack() {
-                @Override
-                public void onScanStart() {
-                    Log.i(TAG, "开始扫描");
-                }
-
-                @Override
-                public void onScanning(List<BluetoothDevice> scannedDevices, BluetoothDevice currentScannedDevice) {
-                    Log.i(TAG, "扫描中");
-                    if (scannedDevices != null && scannedDevices.size() > 0) {
-                        list.clear();
-                        list.addAll(scannedDevices);
-                        adapter.notifyDataSetChanged();
+            boolean setScanTimeUse = true;
+            if(setScanTimeUse){
+                //有设置扫描时间的扫描，时间到会自动结束扫描
+                scanWithTimeUse(type);
+            }else {
+                //扫描蓝牙设备,没有设置扫描时间,低功耗蓝牙会一直扫描下去
+                mHBluetooth.scan(type, new ScanCallBack() {
+                    @Override
+                    public void onScanStart() {
+                        Log.i(TAG, "开始扫描");
                     }
-                }
 
-
-                @Override
-                public void onError(int errorType, String errorMsg) {
-
-                }
-
-                @Override
-                public void onScanFinished(List<BluetoothDevice> bluetoothDevices) {
-                    Log.i(TAG, "扫描结束");
-                    if (bluetoothDevices != null && bluetoothDevices.size() > 0) {
-                        list.clear();
-                        list.addAll(bluetoothDevices);
-                        adapter.notifyDataSetChanged();
+                    @Override
+                    public void onScanning(List<BluetoothDevice> scannedDevices, BluetoothDevice currentScannedDevice) {
+                        Log.i(TAG, "扫描中");
+                        if (scannedDevices != null && scannedDevices.size() > 0) {
+                            list.clear();
+                            list.addAll(scannedDevices);
+                            adapter.notifyDataSetChanged();
+                        }
                     }
-                }
-            });
+
+
+                    @Override
+                    public void onError(int errorType, String errorMsg) {
+
+                    }
+
+                    @Override
+                    public void onScanFinished(List<BluetoothDevice> bluetoothDevices) {
+                        Log.i(TAG, "扫描结束");
+                        if (bluetoothDevices != null && bluetoothDevices.size() > 0) {
+                            list.clear();
+                            list.addAll(bluetoothDevices);
+                            adapter.notifyDataSetChanged();
+                        }
+                    }
+                });
+            }
+
         }
     }
 
@@ -140,7 +147,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
         BluetoothDevice device = list.get(i);
-
+        //调用连接器连接蓝牙设备
         mHBluetooth.connector()
                 .connect(device, new ConnectCallBack() {
 
@@ -151,7 +158,8 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
 
                     @Override
                     public void onConnected(Sender sender) {
-                        Log.i(TAG, "连接成功");
+                        Log.i(TAG, "连接成功,isConnected:"+mHBluetooth.isConnected());
+                        //调用发送器发送命令
                         sender.send(new byte[]{0x01, 0x02}, new SendCallBack() {
                             @Override
                             public void onSending() {
@@ -172,7 +180,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
 
                     @Override
                     public void onDisConnected() {
-                        Log.i(TAG, "已断开连接");
+                        Log.i(TAG, "已断开连接,isConnected:"+mHBluetooth.isConnected());
                     }
 
                     @Override
@@ -182,5 +190,41 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
                 });
     }
 
+
+    private void scanWithTimeUse(int type){
+        //扫描蓝牙设备，扫描6秒就自动停止扫描
+        mHBluetooth.scan(type,6000, new ScanCallBack() {
+            @Override
+            public void onScanStart() {
+                Log.i(TAG, "开始扫描");
+            }
+
+            @Override
+            public void onScanning(List<BluetoothDevice> scannedDevices, BluetoothDevice currentScannedDevice) {
+                Log.i(TAG, "扫描中");
+                if (scannedDevices != null && scannedDevices.size() > 0) {
+                    list.clear();
+                    list.addAll(scannedDevices);
+                    adapter.notifyDataSetChanged();
+                }
+            }
+
+
+            @Override
+            public void onError(int errorType, String errorMsg) {
+
+            }
+
+            @Override
+            public void onScanFinished(List<BluetoothDevice> bluetoothDevices) {
+                Log.i(TAG, "扫描结束");
+                if (bluetoothDevices != null && bluetoothDevices.size() > 0) {
+                    list.clear();
+                    list.addAll(bluetoothDevices);
+                    adapter.notifyDataSetChanged();
+                }
+            }
+        });
+    }
 
 }

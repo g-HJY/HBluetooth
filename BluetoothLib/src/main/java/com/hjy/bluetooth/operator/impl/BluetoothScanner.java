@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 
@@ -21,12 +22,12 @@ import java.util.List;
  */
 public class BluetoothScanner extends Scanner {
 
-    private int scanType;
-    private Context mContext;
-    private ScanCallBack scanCallBack;
+    private int                   scanType;
+    private Context               mContext;
+    private ScanCallBack          scanCallBack;
     private List<BluetoothDevice> bluetoothDevices;
-    private BluetoothAdapter bluetoothAdapter;
-    private Handler handler;
+    private BluetoothAdapter      bluetoothAdapter;
+    private Handler               handler;
 
     public BluetoothScanner() {
     }
@@ -40,19 +41,29 @@ public class BluetoothScanner extends Scanner {
 
     @Override
     public synchronized void scan(int scanType, ScanCallBack scanCallBack) {
+        startScan(scanType, 0, scanCallBack);
+    }
+
+    @Override
+    public void scan(int scanType, int timeUse, ScanCallBack scanCallBack) {
+        startScan(scanType, timeUse, scanCallBack);
+    }
+
+
+    private void startScan(int scanType, int timeUse, ScanCallBack scanCallBack) {
         this.scanType = scanType;
         this.scanCallBack = scanCallBack;
 
-        if (android.os.Build.VERSION.SDK_INT < 18) {
+        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) {
             if (this.scanCallBack != null) {
-                this.scanCallBack.onError(1, "只支持Android 4.3以上的系统版本");
+                this.scanCallBack.onError(1, "Only system versions above Android 4.3 are supported.");
             }
             return;
         }
 
         if (this.scanType == BluetoothDevice.DEVICE_TYPE_LE && !mContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
             if (this.scanCallBack != null) {
-                this.scanCallBack.onError(2, "您的设备不支持低功耗蓝牙功能");
+                this.scanCallBack.onError(2, "Your device does not support low-power Bluetooth.");
             }
             return;
         }
@@ -85,6 +96,19 @@ public class BluetoothScanner extends Scanner {
             bluetoothAdapter.startDiscovery();
         } else if (this.scanType == BluetoothDevice.DEVICE_TYPE_LE) {
             bluetoothAdapter.startLeScan(mLeScanCallBack);
+        }
+
+        //Auto stop when time out
+        if (timeUse != 0) {
+            if (handler == null) {
+                handler = new Handler(Looper.getMainLooper());
+            }
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    stopScan();
+                }
+            }, timeUse);
         }
     }
 
@@ -123,7 +147,7 @@ public class BluetoothScanner extends Scanner {
                 bluetoothDevices.add(bluetoothDevice);
 
                 if (scanCallBack != null) {
-                    scanCallBack.onScanning(bluetoothDevices,bluetoothDevice);
+                    scanCallBack.onScanning(bluetoothDevices, bluetoothDevice);
                 }
 
                 // When discovery is finished, change the Activity title
@@ -150,15 +174,15 @@ public class BluetoothScanner extends Scanner {
 
             if (bluetoothDevices.contains(device)) {
                 int index = bluetoothDevices.indexOf(device);
-                bluetoothDevices.set(index,device);
-            }else {
+                bluetoothDevices.set(index, device);
+            } else {
                 bluetoothDevices.add(device);
             }
 
 
             if (scanCallBack != null) {
-                if(handler == null){
-                   handler = new Handler(Looper.getMainLooper());
+                if (handler == null) {
+                    handler = new Handler(Looper.getMainLooper());
                 }
                 handler.post(new Runnable() {
                     @Override

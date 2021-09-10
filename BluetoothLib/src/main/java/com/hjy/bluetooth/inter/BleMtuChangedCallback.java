@@ -11,6 +11,6 @@ public interface BleMtuChangedCallback {
 
       void onSetMTUFailure(int realMtuSize,BleException bleException);
 
-      void onMtuChanged();
+      void onMtuChanged(int mtuSize);
 
 }

@@ -1,7 +1,7 @@
 package com.hjy.bluetooth.constant;
 
 /**
- * Created by Administrator on 2018/10/23.
+ * Created by _H_JY on 2018/10/23.
  */
 
 public final class BluetoothState {

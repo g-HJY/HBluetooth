@@ -95,7 +95,7 @@ public class BluetoothSender extends Sender {
         }
 
         if (mGatt != null) {
-            //这里调用disconnect后会到onConnectionStateChange，再调gatt.close()释放资源
+            //will go to onConnectionStateChange()，and call gatt.close() to release
             mGatt.disconnect();
         }
 
