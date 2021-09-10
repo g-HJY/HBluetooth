@@ -153,21 +153,19 @@ public class BluetoothConnector extends Connector {
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             super.onServicesDiscovered(gatt, status);
 
-            //At the software level, MTU setting is supported only when Android API version > = 21 (Android 5.0).
-            //At the hardware level, only modules with Bluetooth 4.2 and above can support the setting of MTU.
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                int mtuSize = HBluetooth.getInstance(mContext).getMtuSize();
-                if (mtuSize > 23 && mtuSize < 512) {
-                    gatt.requestMtu(mtuSize);
-                }
-            }
-
-            String writeCharacteristicUUID = HBluetooth.getInstance(mContext).getWriteCharacteristicUUID();
-            if (TextUtils.isEmpty(writeCharacteristicUUID)) {
-                writeCharacteristicUUID = "0000ffe1-0000-1000-8000-00805f9b34fb";
-            }
-
             if (status == BluetoothGatt.GATT_SUCCESS) {
+                //At the software level, MTU setting is supported only when Android API version > = 21 (Android 5.0).
+                //At the hardware level, only modules with Bluetooth 4.2 and above can support the setting of MTU.
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    int mtuSize = HBluetooth.getInstance(mContext).getMtuSize();
+                    if (mtuSize > 23 && mtuSize < 512) {
+                        gatt.requestMtu(mtuSize);
+                    }
+                }
+                String writeCharacteristicUUID = HBluetooth.getInstance(mContext).getWriteCharacteristicUUID();
+                if (TextUtils.isEmpty(writeCharacteristicUUID)) {
+                    writeCharacteristicUUID = "0000ffe1-0000-1000-8000-00805f9b34fb";
+                }
                 List<BluetoothGattService> services = gatt.getServices();
                 if (services != null && services.size() > 0) {
                     for (int i = 0; i < services.size(); i++) {

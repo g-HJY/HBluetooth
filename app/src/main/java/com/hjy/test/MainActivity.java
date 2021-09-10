@@ -54,7 +54,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
                 //低功耗蓝牙才需要设置，传入你自己的UUID
                 .setWriteCharacteristicUUID("0000fe61-0000-1000-8000-00805f9b34fb")
                 //设置MTU扩容
-                .setMtu(500, new BleMtuChangedCallback() {
+                .setMtu(200, new BleMtuChangedCallback() {
                     @Override
                     public void onSetMTUFailure(int realMtuSize, BleException bleException) {
                         Log.i(TAG, "bleException:" + bleException.getMessage() + "  realMtuSize:" + realMtuSize);
