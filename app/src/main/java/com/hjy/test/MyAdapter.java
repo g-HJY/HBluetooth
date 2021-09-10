@@ -7,7 +7,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import com.hjy.hardwarehost.entity.BluetoothDevice;
+import com.hjy.bluetooth.entity.BluetoothDevice;
 
 import java.util.List;
 

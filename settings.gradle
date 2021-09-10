@@ -1,1 +1,1 @@
-include ':app', ':hardwarecommunicator'
+include ':app', ':BluetoothLib'

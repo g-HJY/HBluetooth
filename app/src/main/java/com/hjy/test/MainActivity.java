@@ -8,14 +8,14 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
-import com.hjy.hardwarehost.HBluetooth;
-import com.hjy.hardwarehost.entity.BluetoothDevice;
-import com.hjy.hardwarehost.exception.BleException;
-import com.hjy.hardwarehost.inter.BleMtuChangedCallback;
-import com.hjy.hardwarehost.inter.ConnectCallBack;
-import com.hjy.hardwarehost.inter.ScanCallBack;
-import com.hjy.hardwarehost.inter.SendCallBack;
-import com.hjy.hardwarehost.operator.abstra.Sender;
+import com.hjy.bluetooth.HBluetooth;
+import com.hjy.bluetooth.entity.BluetoothDevice;
+import com.hjy.bluetooth.exception.BleException;
+import com.hjy.bluetooth.inter.BleMtuChangedCallback;
+import com.hjy.bluetooth.inter.ConnectCallBack;
+import com.hjy.bluetooth.inter.ScanCallBack;
+import com.hjy.bluetooth.inter.SendCallBack;
+import com.hjy.bluetooth.operator.abstra.Sender;
 
 import java.io.DataInputStream;
 import java.util.ArrayList;
