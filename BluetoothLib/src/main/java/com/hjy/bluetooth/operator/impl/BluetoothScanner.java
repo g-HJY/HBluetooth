@@ -1,6 +1,9 @@
 package com.hjy.bluetooth.operator.impl;
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanResult;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -9,6 +12,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.RequiresApi;
 
 import com.hjy.bluetooth.entity.BluetoothDevice;
 import com.hjy.bluetooth.inter.ScanCallBack;
@@ -25,6 +29,7 @@ public class BluetoothScanner extends Scanner {
     private int                   scanType;
     private Context               mContext;
     private ScanCallBack          scanCallBack;
+    private BluetoothLeScanner    bluetoothLeScanner;
     private List<BluetoothDevice> bluetoothDevices;
     private BluetoothAdapter      bluetoothAdapter;
     private Handler               handler;
@@ -95,7 +100,14 @@ public class BluetoothScanner extends Scanner {
             }
             bluetoothAdapter.startDiscovery();
         } else if (this.scanType == BluetoothDevice.DEVICE_TYPE_LE) {
-            bluetoothAdapter.startLeScan(mLeScanCallBack);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                //After 5.0 use BluetoothLeScanner to scan
+                //Because bluetoothAdapter.startLeScan deprecated
+                bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
+                bluetoothLeScanner.startScan(mScanCallback);
+            } else {
+                bluetoothAdapter.startLeScan(mLeScanCallBack);
+            }
         }
 
         //Auto stop when time out
@@ -160,7 +172,7 @@ public class BluetoothScanner extends Scanner {
     };
 
 
-    //Ble搜索回调
+    //Ble scan callback before 5.0
     private BluetoothAdapter.LeScanCallback mLeScanCallBack = new BluetoothAdapter.LeScanCallback() {
 
         @Override
@@ -195,6 +207,57 @@ public class BluetoothScanner extends Scanner {
     };
 
 
+    //Ble scan callback after 5.0
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    private ScanCallback mScanCallback = new ScanCallback() {
+        @Override
+        public void onScanResult(int callbackType, ScanResult result) {
+            super.onScanResult(callbackType, result);
+            android.bluetooth.BluetoothDevice bluetoothDevice = result.getDevice();
+            BluetoothDevice device = new BluetoothDevice();
+            device.setName(bluetoothDevice.getName());
+            device.setAddress(bluetoothDevice.getAddress());
+            device.setType(BluetoothDevice.DEVICE_TYPE_LE);
+            if (result.getScanRecord() != null) {
+                device.setScanRecord(result.getScanRecord().getBytes());
+            }
+
+            if (bluetoothDevices.contains(device)) {
+                int index = bluetoothDevices.indexOf(device);
+                bluetoothDevices.set(index, device);
+            } else {
+                bluetoothDevices.add(device);
+            }
+
+
+            if (scanCallBack != null) {
+                if (handler == null) {
+                    handler = new Handler(Looper.getMainLooper());
+                }
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        scanCallBack.onScanFinished(bluetoothDevices);
+                    }
+                });
+            }
+        }
+
+        @Override
+        public void onBatchScanResults(List<ScanResult> results) {
+            super.onBatchScanResults(results);
+        }
+
+        @Override
+        public void onScanFailed(int errorCode) {
+            super.onScanFailed(errorCode);
+            if (scanCallBack != null) {
+                scanCallBack.onError(errorCode, "Scan Failed!");
+            }
+        }
+    };
+
+
     @Override
     public synchronized void stopScan() {
         if (scanType == BluetoothDevice.DEVICE_TYPE_CLASSIC) {
@@ -203,7 +266,12 @@ public class BluetoothScanner extends Scanner {
             }
             unregisterReceiver();
         } else if (scanType == BluetoothDevice.DEVICE_TYPE_LE) {
-            bluetoothAdapter.stopLeScan(mLeScanCallBack);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && bluetoothLeScanner != null) {
+                bluetoothLeScanner.stopScan(mScanCallback);
+            } else {
+                bluetoothAdapter.stopLeScan(mLeScanCallBack);
+            }
+
         }
     }
 
