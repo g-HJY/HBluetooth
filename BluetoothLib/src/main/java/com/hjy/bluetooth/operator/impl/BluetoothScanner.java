@@ -27,6 +27,7 @@ import java.util.List;
 public class BluetoothScanner extends Scanner {
 
     private int                   scanType;
+    private boolean isScanning;
     private Context               mContext;
     private ScanCallBack          scanCallBack;
     private BluetoothLeScanner    bluetoothLeScanner;
@@ -89,23 +90,27 @@ public class BluetoothScanner extends Scanner {
             unregisterReceiver();
 
             // Register for broadcasts when a device is discovered
-            IntentFilter filter = new IntentFilter(android.bluetooth.BluetoothDevice.ACTION_FOUND);
-            mContext.registerReceiver(mReceiver, filter);
             // Register for broadcasts when discovery has finished
-            filter = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(android.bluetooth.BluetoothDevice.ACTION_FOUND);
+            filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
             mContext.registerReceiver(mReceiver, filter);
+
             // If we're already discovering, stop it
             if (bluetoothAdapter.isDiscovering()) {
                 bluetoothAdapter.cancelDiscovery();
             }
+            isScanning = true;
             bluetoothAdapter.startDiscovery();
         } else if (this.scanType == BluetoothDevice.DEVICE_TYPE_LE) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 //After 5.0 use BluetoothLeScanner to scan
                 //Because bluetoothAdapter.startLeScan deprecated
                 bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
+                isScanning = true;
                 bluetoothLeScanner.startScan(mScanCallback);
             } else {
+                isScanning = true;
                 bluetoothAdapter.startLeScan(mLeScanCallBack);
             }
         }
@@ -167,6 +172,7 @@ public class BluetoothScanner extends Scanner {
                 if (scanCallBack != null) {
                     scanCallBack.onScanFinished(bluetoothDevices);
                 }
+                isScanning = false;
             }
         }
     };
@@ -178,7 +184,7 @@ public class BluetoothScanner extends Scanner {
         @Override
         public void onLeScan(android.bluetooth.BluetoothDevice bluetoothDevice, int i, byte[] bytes) {
 
-            BluetoothDevice device = new BluetoothDevice();
+            final BluetoothDevice device = new BluetoothDevice();
             device.setName(bluetoothDevice.getName());
             device.setAddress(bluetoothDevice.getAddress());
             device.setType(BluetoothDevice.DEVICE_TYPE_LE);
@@ -199,7 +205,7 @@ public class BluetoothScanner extends Scanner {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        scanCallBack.onScanFinished(bluetoothDevices);
+                        scanCallBack.onScanning(bluetoothDevices,device);
                     }
                 });
             }
@@ -214,7 +220,7 @@ public class BluetoothScanner extends Scanner {
         public void onScanResult(int callbackType, ScanResult result) {
             super.onScanResult(callbackType, result);
             android.bluetooth.BluetoothDevice bluetoothDevice = result.getDevice();
-            BluetoothDevice device = new BluetoothDevice();
+            final BluetoothDevice device = new BluetoothDevice();
             device.setName(bluetoothDevice.getName());
             device.setAddress(bluetoothDevice.getAddress());
             device.setType(BluetoothDevice.DEVICE_TYPE_LE);
@@ -237,7 +243,7 @@ public class BluetoothScanner extends Scanner {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        scanCallBack.onScanFinished(bluetoothDevices);
+                        scanCallBack.onScanning(bluetoothDevices,device);
                     }
                 });
             }
@@ -271,7 +277,21 @@ public class BluetoothScanner extends Scanner {
             } else {
                 bluetoothAdapter.stopLeScan(mLeScanCallBack);
             }
+        }
 
+        if(isScanning){
+            if (scanCallBack != null) {
+                if (handler == null) {
+                    handler = new Handler(Looper.getMainLooper());
+                }
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        scanCallBack.onScanFinished(bluetoothDevices);
+                    }
+                });
+            }
+            isScanning = false;
         }
     }
 

@@ -17,22 +17,22 @@
             android:id="@+id/btn_scan_classic"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="蓝牙2.0方式扫描" />
+            android:layout_weight="0.9"
+            android:text="经典蓝牙方式扫描" />
 
         <Button
             android:id="@+id/btn_scan_ble"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="蓝牙4.0方式扫描" />
+            android:text="低功耗蓝牙方式扫描" />
 
         <Button
             android:id="@+id/btn_disconnect"
             android:layout_width="0dp"
-            android:layout_weight="1"
+            android:layout_weight="0.6"
             android:layout_height="wrap_content"
-            android:text="断开设备蓝牙连接"
+            android:text="断开连接"
             />
 
 

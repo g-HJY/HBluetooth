@@ -2,11 +2,11 @@ package com.hjy.test;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.hjy.bluetooth.HBluetooth;
 import com.hjy.bluetooth.entity.BluetoothDevice;
@@ -124,13 +124,12 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
 
 
                     @Override
-                    public void onError(int errorType, String errorMsg) {
-
-                    }
+                    public void onError(int errorType, String errorMsg) {}
 
                     @Override
                     public void onScanFinished(List<BluetoothDevice> bluetoothDevices) {
                         Log.i(TAG, "扫描结束");
+                        Toast.makeText(MainActivity.this,"扫描结束",Toast.LENGTH_LONG).show();
                         if (bluetoothDevices != null && bluetoothDevices.size() > 0) {
                             list.clear();
                             list.addAll(bluetoothDevices);
@@ -218,6 +217,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
             @Override
             public void onScanFinished(List<BluetoothDevice> bluetoothDevices) {
                 Log.i(TAG, "扫描结束");
+                Toast.makeText(MainActivity.this,"扫描结束",Toast.LENGTH_LONG).show();
                 if (bluetoothDevices != null && bluetoothDevices.size() > 0) {
                     list.clear();
                     list.addAll(bluetoothDevices);
