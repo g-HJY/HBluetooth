@@ -3,6 +3,7 @@ package com.hjy.bluetooth.operator.impl;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothSocket;
+import android.os.AsyncTask;
 
 import com.hjy.bluetooth.entity.BluetoothDevice;
 import com.hjy.bluetooth.inter.ConnectCallBack;
@@ -109,7 +110,7 @@ public class BluetoothSender extends Sender {
     public void send(final byte[] command, final SendCallBack sendCallBack) {
         if (LockStore.getLock(LOCK_NAME)) {
             if (mSocket != null && type == BluetoothDevice.DEVICE_TYPE_CLASSIC) {
-                new Thread(new Runnable() {
+                AsyncTask.SERIAL_EXECUTOR.execute(new Runnable() {
                     @Override
                     public void run() {
                         try {
@@ -156,7 +157,7 @@ public class BluetoothSender extends Sender {
                             LockStore.releaseLock(LOCK_NAME);
                         }
                     }
-                }).start();
+                });
             } else if (mGatt != null && characteristic != null && type == BluetoothDevice.DEVICE_TYPE_LE) {
                 if (connector != null && sendCallBack != null) {
                     connector.setSendCallBack(sendCallBack);

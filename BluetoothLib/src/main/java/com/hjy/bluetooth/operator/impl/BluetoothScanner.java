@@ -51,7 +51,7 @@ public class BluetoothScanner extends Scanner {
     }
 
     @Override
-    public void scan(int scanType, int timeUse, ScanCallBack scanCallBack) {
+    public synchronized void scan(int scanType, int timeUse, ScanCallBack scanCallBack) {
         startScan(scanType, timeUse, scanCallBack);
     }
 
@@ -115,7 +115,7 @@ public class BluetoothScanner extends Scanner {
             }
         }
 
-        //Auto stop when time out
+        //Auto stop scan when time out
         if (timeUse != 0) {
             if (handler == null) {
                 handler = new Handler(Looper.getMainLooper());

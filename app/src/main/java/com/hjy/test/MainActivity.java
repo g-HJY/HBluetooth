@@ -12,6 +12,7 @@ import com.hjy.bluetooth.HBluetooth;
 import com.hjy.bluetooth.entity.BluetoothDevice;
 import com.hjy.bluetooth.exception.BleException;
 import com.hjy.bluetooth.inter.BleMtuChangedCallback;
+import com.hjy.bluetooth.inter.BleNotifyCallBack;
 import com.hjy.bluetooth.inter.ConnectCallBack;
 import com.hjy.bluetooth.inter.ScanCallBack;
 import com.hjy.bluetooth.inter.SendCallBack;
@@ -48,12 +49,14 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
 
         mHBluetooth = HBluetooth.getInstance(this);
 
-        mHBluetooth
-                //开启蓝牙功能
-                .enableBluetooth()
-                //低功耗蓝牙才需要设置，传入你自己的UUID
-                .setWriteCharacteristicUUID("0000fe61-0000-1000-8000-00805f9b34fb")
-                //设置MTU扩容
+        //请填写你自己设备的UUID
+        //低功耗蓝牙才需要如下配置BleConfig,经典蓝牙不需要new HBluetooth.BleConfig()
+        HBluetooth.BleConfig bleConfig = new HBluetooth.BleConfig();
+        bleConfig.withServiceUUID("0000fe61-0000-1000-8000-00805f9b34fb")
+                .withWriteCharacteristicUUID("0000fe61-0000-1000-8000-00805f9b34fb")
+                .withNotifyCharacteristicUUID("0000fe61-0000-1000-8000-00805f9b34fb")
+                //useCharacteristicDescriptor 默认为false
+                .useCharacteristicDescriptor(false)
                 .setMtu(200, new BleMtuChangedCallback() {
                     @Override
                     public void onSetMTUFailure(int realMtuSize, BleException bleException) {
@@ -62,9 +65,16 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
 
                     @Override
                     public void onMtuChanged(int mtuSize) {
-
+                        Log.i(TAG, "Mtu set success,mtuSize:" + mtuSize);
                     }
                 });
+
+
+        mHBluetooth
+                //开启蓝牙功能
+                .enableBluetooth()
+                //低功耗蓝牙才需要调setBleConfig
+                .setBleConfig(bleConfig);
     }
 
 
@@ -92,19 +102,19 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
                 type = BluetoothDevice.DEVICE_TYPE_LE;
 
                 //如果没有设置扫描时间，低功耗蓝牙扫描需要手动调用stopScan()方法停止扫描，否则会一直扫描下去
-//                new Handler().postDelayed(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        mHBluetooth.scanner().stopScan();
-//                    }
-//                }, 10000);
+                //                new Handler().postDelayed(new Runnable() {
+                //                    @Override
+                //                    public void run() {
+                //                        mHBluetooth.scanner().stopScan();
+                //                    }
+                //                }, 10000);
             }
 
             boolean setScanTimeUse = true;
-            if(setScanTimeUse){
+            if (setScanTimeUse) {
                 //有设置扫描时间的扫描，时间到会自动结束扫描
                 scanWithTimeUse(type);
-            }else {
+            } else {
                 //扫描蓝牙设备,没有设置扫描时间,低功耗蓝牙会一直扫描下去
                 mHBluetooth.scan(type, new ScanCallBack() {
                     @Override
@@ -124,12 +134,13 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
 
 
                     @Override
-                    public void onError(int errorType, String errorMsg) {}
+                    public void onError(int errorType, String errorMsg) {
+                    }
 
                     @Override
                     public void onScanFinished(List<BluetoothDevice> bluetoothDevices) {
                         Log.i(TAG, "扫描结束");
-                        Toast.makeText(MainActivity.this,"扫描结束",Toast.LENGTH_LONG).show();
+                        Toast.makeText(MainActivity.this, "扫描结束", Toast.LENGTH_LONG).show();
                         if (bluetoothDevices != null && bluetoothDevices.size() > 0) {
                             list.clear();
                             list.addAll(bluetoothDevices);
@@ -157,7 +168,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
 
                     @Override
                     public void onConnected(Sender sender) {
-                        Log.i(TAG, "连接成功,isConnected:"+mHBluetooth.isConnected());
+                        Log.i(TAG, "连接成功,isConnected:" + mHBluetooth.isConnected());
                         //调用发送器发送命令
                         sender.send(new byte[]{0x01, 0x02}, new SendCallBack() {
                             @Override
@@ -179,20 +190,33 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
 
                     @Override
                     public void onDisConnected() {
-                        Log.i(TAG, "已断开连接,isConnected:"+mHBluetooth.isConnected());
+                        Log.i(TAG, "已断开连接,isConnected:" + mHBluetooth.isConnected());
                     }
 
                     @Override
                     public void onError(int errorType, String errorMsg) {
                         Log.i(TAG, "错误类型：" + errorType + " 错误原因：" + errorMsg);
                     }
+
+                    //低功耗蓝牙才需要BleNotifyCallBack
+                    //经典蓝牙可以只调两参方法connect(BluetoothDevice device, ConnectCallBack connectCallBack)
+                }, new BleNotifyCallBack() {
+                    @Override
+                    public void onNotifySuccess() {
+                        Log.i(TAG, "打开通知成功");
+                    }
+
+                    @Override
+                    public void onNotifyFailure(BleException bleException) {
+                        Log.i(TAG, "打开通知失败：" + bleException.getMessage());
+                    }
                 });
     }
 
 
-    private void scanWithTimeUse(int type){
+    private void scanWithTimeUse(int type) {
         //扫描蓝牙设备，扫描6秒就自动停止扫描
-        mHBluetooth.scan(type,6000, new ScanCallBack() {
+        mHBluetooth.scan(type, 6000, new ScanCallBack() {
             @Override
             public void onScanStart() {
                 Log.i(TAG, "开始扫描");
@@ -217,7 +241,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
             @Override
             public void onScanFinished(List<BluetoothDevice> bluetoothDevices) {
                 Log.i(TAG, "扫描结束");
-                Toast.makeText(MainActivity.this,"扫描结束",Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this, "扫描结束", Toast.LENGTH_LONG).show();
                 if (bluetoothDevices != null && bluetoothDevices.size() > 0) {
                     list.clear();
                     list.addAll(bluetoothDevices);

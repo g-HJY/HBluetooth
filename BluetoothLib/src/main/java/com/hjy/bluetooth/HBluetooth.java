@@ -34,14 +34,11 @@ public class HBluetooth {
     private Connector             connector;
     private Sender                sender;
     private boolean               isConnected;
-    private int                   mtuSize;
-    private BleMtuChangedCallback mBleMtuChangedCallback;
-    private String                writeCharacteristicUUID;
+    private BleConfig mBleConfig;
 
     private HBluetooth(Context context) {
         this.mContext = context;
     }
-
 
     public static HBluetooth getInstance(Context context) {
         if (mHBluetooth == null) {
@@ -138,15 +135,6 @@ public class HBluetooth {
         return sender;
     }
 
-    public String getWriteCharacteristicUUID() {
-        return writeCharacteristicUUID;
-    }
-
-    public HBluetooth setWriteCharacteristicUUID(String writeCharacteristicUUID) {
-        this.writeCharacteristicUUID = writeCharacteristicUUID;
-        return this;
-    }
-
     public boolean isConnected() {
         return isConnected;
     }
@@ -155,39 +143,87 @@ public class HBluetooth {
         isConnected = connected;
     }
 
-    /**
-     * set Mtu
-     *
-     * @param mtuSize
-     * @param callback
-     */
-    public HBluetooth setMtu(int mtuSize,
-                             BleMtuChangedCallback callback) {
-        if (callback == null) {
-            throw new IllegalArgumentException("BleMtuChangedCallback can not be Null!");
-        }
 
-        if (mtuSize > ValueLimit.DEFAULT_MAX_MTU) {
-            callback.onSetMTUFailure(mtuSize, new BleException("requiredMtu should lower than 512 !"));
-        }
+    public BleConfig getBleConfig() {
+        return mBleConfig;
+    }
 
-        if (mtuSize < ValueLimit.DEFAULT_MTU) {
-            callback.onSetMTUFailure(mtuSize, new BleException("requiredMtu should higher than 23 !"));
-        }
-
-        this.mtuSize = mtuSize;
-        mBleMtuChangedCallback = callback;
-        return this;
+    public void setBleConfig(BleConfig bleConfig) {
+        mBleConfig = bleConfig;
     }
 
 
-    public BleMtuChangedCallback getBleMtuChangedCallback() {
-        return mBleMtuChangedCallback;
-    }
+    public static class BleConfig {
+        private String serviceUUID, writeCharacteristicUUID, notifyCharacteristicUUID;
+        private boolean useCharacteristicDescriptor;
+        private int                   mtuSize;
+        private BleMtuChangedCallback mBleMtuChangedCallback;
+        public BleConfig withServiceUUID(String serviceUUID) {
+            this.serviceUUID = serviceUUID;
+            return this;
+        }
 
+        public BleConfig withWriteCharacteristicUUID(String writeCharacteristicUUID) {
+            this.writeCharacteristicUUID = writeCharacteristicUUID;
+            return this;
+        }
 
-    public int getMtuSize() {
-        return mtuSize;
+        public BleConfig withNotifyCharacteristicUUID(String notifyCharacteristicUUID) {
+            this.notifyCharacteristicUUID = notifyCharacteristicUUID;
+            return this;
+        }
+        public BleConfig useCharacteristicDescriptor(boolean useCharacteristicDescriptor) {
+            this.useCharacteristicDescriptor = useCharacteristicDescriptor;
+            return this;
+        }
+
+        /**
+         * set Mtu
+         *
+         * @param mtuSize
+         * @param callback
+         */
+        public BleConfig setMtu(int mtuSize, BleMtuChangedCallback callback) {
+            if (callback == null) {
+                throw new IllegalArgumentException("BleMtuChangedCallback can not be Null!");
+            }
+
+            if (mtuSize > ValueLimit.DEFAULT_MAX_MTU) {
+                callback.onSetMTUFailure(mtuSize, new BleException("requiredMtu should lower than 512 !"));
+            }
+
+            if (mtuSize < ValueLimit.DEFAULT_MTU) {
+                callback.onSetMTUFailure(mtuSize, new BleException("requiredMtu should higher than 23 !"));
+            }
+
+            this.mtuSize = mtuSize;
+            mBleMtuChangedCallback = callback;
+            return this;
+        }
+
+        public String getServiceUUID() {
+            return serviceUUID;
+        }
+
+        public String getWriteCharacteristicUUID() {
+            return writeCharacteristicUUID;
+        }
+
+        public String getNotifyCharacteristicUUID() {
+            return notifyCharacteristicUUID;
+        }
+
+        public boolean isUseCharacteristicDescriptor() {
+            return useCharacteristicDescriptor;
+        }
+
+        public int getMtuSize() {
+            return mtuSize;
+        }
+
+        public BleMtuChangedCallback getBleMtuChangedCallback() {
+            return mBleMtuChangedCallback;
+        }
     }
 
 
