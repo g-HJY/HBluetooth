@@ -10,5 +10,5 @@ public interface SendCallBack {
 
     void onSending();
 
-    void onReceived(DataInputStream dataInputStream, byte[] bleValue);
+    void onReceived(DataInputStream dataInputStream, byte[] result);
 }

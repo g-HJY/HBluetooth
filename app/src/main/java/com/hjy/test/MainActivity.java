@@ -177,8 +177,8 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
                             }
 
                             @Override
-                            public void onReceived(DataInputStream dataInputStream, byte[] bleValue) {
-                                Log.i(TAG, "onReceived->" + dataInputStream + "---" + bleValue);
+                            public void onReceived(DataInputStream dataInputStream, byte[] result) {
+                                Log.i(TAG, "onReceived->" + dataInputStream + "-result->" + Tools.bytesToHexString(result));
                             }
                         });
                     }

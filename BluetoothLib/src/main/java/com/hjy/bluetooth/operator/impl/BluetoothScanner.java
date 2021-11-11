@@ -35,7 +35,7 @@ public class BluetoothScanner extends Scanner {
     private BluetoothAdapter      bluetoothAdapter;
     private Handler               handler;
 
-    public BluetoothScanner() {
+    private BluetoothScanner() {
     }
 
 
