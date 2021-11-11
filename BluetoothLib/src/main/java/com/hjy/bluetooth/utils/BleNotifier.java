@@ -36,7 +36,7 @@ public class BleNotifier {
                 failureMsg = "Gatt setCharacteristicNotification fail";
             } else {
                 notifySuccess = false;
-                failureMsg = "NotificationCharacteristic is null";
+                failureMsg = "NotificationCharacteristic is null,please check the notifyUUID whether right";
             }
         } else {
             notifySuccess = gatt.setCharacteristicNotification(finalNotifyCharacteristic = bluetoothGattCharacteristic, true);
