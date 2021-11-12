@@ -53,9 +53,9 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
         //请填写你自己设备的UUID
         //低功耗蓝牙才需要如下配置BleConfig,经典蓝牙不需要new HBluetooth.BleConfig()
         HBluetooth.BleConfig bleConfig = new HBluetooth.BleConfig();
-        bleConfig.withServiceUUID("b973f2e0-b19e-11e2-9e96-0800200c9a66")
-                .withWriteCharacteristicUUID("e973f2e2-b19e-11e2-9e96-0800200c9a66")
-                .withNotifyCharacteristicUUID("d973f2e1-b19e-11e2-9e96-0800200c9a66")
+        bleConfig.withServiceUUID("0000fe61-0000-1000-8000-00805f9b34fb")
+                .withWriteCharacteristicUUID("0000fe61-0000-1000-8000-00805f9b34fb")
+                .withNotifyCharacteristicUUID("0000fe61-0000-1000-8000-00805f9b34fb")
                 //命令长度大于20个字节时是否分包发送，默认false,分包时可以调两参方法设置包之间发送间隔
                 //.splitPacketToSendWhenCmdLenBeyond20(false)
                 //useCharacteristicDescriptor 默认false

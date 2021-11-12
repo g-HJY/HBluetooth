@@ -25,43 +25,59 @@ Add it in your root build.gradle at the end of repositories:
 
 二.使用介绍
 
-1.第一步，使用前先实例化HBluetooth（全局单例）,并且必须调用enableBluetooth()方法开启蓝牙功能：
+1.第一步，使用前先在你应用的Application中调init方法初始化HBluetooth：
 
-               HBluetooth.getInstance(this).enableBluetooth()；
+             public class MyApp extends Application {
+
+                 @Override
+                 public void onCreate() {
+                     super.onCreate();
+                     //初始化 HBluetooth
+                     HBluetooth.init(this);
+                 }
+             }
+
+
+2.然后必须调用enableBluetooth()方法开启蓝牙功能，你可以在activity中调用：
+
+                 //开启蓝牙功能
+                 HBluetooth.getInstance().enableBluetooth()
 
 
 
-2.如果是低功耗蓝牙，需要设置配置项，经典蓝牙忽略跳过即可：
+3.如果是低功耗蓝牙，需要设置配置项，经典蓝牙忽略跳过即可：
 
 分别是主服务UUID（withServiceUUID）、读写特征值UUID（withWriteCharacteristicUUID）、通知UUID（withNotifyCharacteristicUUID）以及是否设置最大传输单元（setMtu不设置不用调）等
 
-	//请填写你自己设备的UUID
-        //低功耗蓝牙才需要如下配置BleConfig,经典蓝牙不需要new HBluetooth.BleConfig()
-        HBluetooth.BleConfig bleConfig = new HBluetooth.BleConfig();
-        bleConfig.withServiceUUID("0000fe61-0000-1000-8000-00805f9b34fb")
-                .withWriteCharacteristicUUID("0000fe61-0000-1000-8000-00805f9b34fb")
-                .withNotifyCharacteristicUUID("0000fe61-0000-1000-8000-00805f9b34fb")
-                //useCharacteristicDescriptor 默认为false
-                .useCharacteristicDescriptor(false)
-                .setMtu(200, new BleMtuChangedCallback() {
-                    @Override
-                    public void onSetMTUFailure(int realMtuSize, BleException bleException) {
-                        Log.i(TAG, "bleException:" + bleException.getMessage() + "  realMtuSize:" + realMtuSize);
-                    }
+	     //请填写你自己设备的UUID
+            //低功耗蓝牙才需要如下配置BleConfig,经典蓝牙不需要new HBluetooth.BleConfig()
+            HBluetooth.BleConfig bleConfig = new HBluetooth.BleConfig();
+            bleConfig.withServiceUUID("0000fe61-0000-1000-8000-00805f9b34fb")
+                     .withWriteCharacteristicUUID("0000fe61-0000-1000-8000-00805f9b34fb")
+                     .withNotifyCharacteristicUUID("0000fe61-0000-1000-8000-00805f9b34fb")
+                    //命令长度大于20个字节时是否分包发送，默认false,分包时可以调两参方法设置包之间发送间隔
+                    //.splitPacketToSendWhenCmdLenBeyond20(false)
+                    //useCharacteristicDescriptor 默认false
+                    .useCharacteristicDescriptor(false)
+                    .setMtu(200, new BleMtuChangedCallback() {
+                        @Override
+                        public void onSetMTUFailure(int realMtuSize, BluetoothException bleException) {
+                            Log.i(TAG, "bleException:" + bleException.getMessage() + "  realMtuSize:" + realMtuSize);
+                        }
 
-                    @Override
-                    public void onMtuChanged(int mtuSize) {
-                        Log.i(TAG, "Mtu set success,mtuSize:" + mtuSize);
-                    }
-                });
-		HBluetooth.getInstance(this).setBleConfig(bleConfig);
+                        @Override
+                        public void onMtuChanged(int mtuSize) {
+                            Log.i(TAG, "Mtu set success,mtuSize:" + mtuSize);
+                        }
+                    });
+         //低功耗蓝牙才需要调setBleConfig
+		HBluetooth.getInstance().setBleConfig(bleConfig);
 
 
 
-3.开启蓝牙能力后，接着你就可以开始进行蓝牙设备扫描，其中，type 为蓝牙设备类型（经典蓝牙或低功耗蓝牙）：
+4.开启蓝牙能力后，接着你就可以开始进行蓝牙设备扫描，其中，type 为蓝牙设备类型（经典蓝牙或低功耗蓝牙）：
 
-               HBluetooth.getInstance(this)
-                    .scanner()
+               HBluetooth.getInstance()
                     .scan(type, new ScanCallBack() {
                 @Override
                 public void onScanStart() {
@@ -91,7 +107,7 @@ Add it in your root build.gradle at the end of repositories:
 
 
     或者，如果你想在第一步操作后直接进行扫描，则可以这样调用：
-            HBluetooth.getInstance(this)
+            HBluetooth.getInstance()
                     .enableBluetooth()
                     .scan(type, new ScanCallBack() {
                 @Override
@@ -122,79 +138,92 @@ Add it in your root build.gradle at the end of repositories:
 
 
 
-4.一旦扫描到设备，你就可以找到目标设备并连接：
+5.一旦扫描到设备，你就可以找到目标设备并连接：
 
-             HBluetooth.getInstance(this)
-	            .connector()
-                .connect(device, new ConnectCallBack() {
+             HBluetooth.getInstance()
+	           .connect(device, new ConnectCallBack() {
 
-                    @Override
-                    public void onConnecting() {
-                        Log.i(TAG, "连接中...");
-                    }
+                           @Override
+                           public void onConnecting() {
+                               Log.i(TAG, "连接中...");
+                           }
 
-                    @Override
-                    public void onConnected(Sender sender) {
-                        Log.i(TAG, "连接成功,isConnected:" + mHBluetooth.isConnected());
-                        //调用发送器发送命令
-                        sender.send(new byte[]{0x01, 0x02}, new SendCallBack() {
-                            @Override
-                            public void onSending() {
-                                Log.i(TAG, "命令发送中...");
-                            }
+                           @Override
+                           public void onConnected(Sender sender) {
+                               Log.i(TAG, "连接成功,isConnected:" + mHBluetooth.isConnected());
+                               //调用发送器发送命令
+                               byte[] demoCommand = new byte[]{0x01, 0x02};
+                               sender.send(demoCommand, new SendCallBack() {
+                                   @Override
+                                   public void onSending(byte[] command) {
+                                       Log.i(TAG, "命令发送中...");
+                                   }
 
-                            @Override
-                            public void onReceived(DataInputStream dataInputStream, byte[] result) {
-                                Log.i(TAG, "onReceived->" + dataInputStream + "-result->" + Tools.bytesToHexString(result));
-                            }
-                        });
-                    }
+                                   @Override
+                                   public void onSendFailure(BluetoothException bleException) {
+                                       Log.e("mylog", "发送命令失败->" + bleException.getMessage());
+                                   }
+                               });
+                           }
 
-                    @Override
-                    public void onDisConnecting() {
-                        Log.i(TAG, "断开连接中...");
-                    }
+                           @Override
+                           public void onDisConnecting() {
+                               Log.i(TAG, "断开连接中...");
+                           }
 
-                    @Override
-                    public void onDisConnected() {
-                        Log.i(TAG, "已断开连接,isConnected:" + mHBluetooth.isConnected());
-                    }
+                           @Override
+                           public void onDisConnected() {
+                               Log.i(TAG, "已断开连接,isConnected:" + mHBluetooth.isConnected());
+                           }
 
-                    @Override
-                    public void onError(int errorType, String errorMsg) {
-                        Log.i(TAG, "错误类型：" + errorType + " 错误原因：" + errorMsg);
-                    }
+                           @Override
+                           public void onError(int errorType, String errorMsg) {
+                               Log.i(TAG, "错误类型：" + errorType + " 错误原因：" + errorMsg);
+                           }
 
-                    //低功耗蓝牙才需要BleNotifyCallBack
-                    //经典蓝牙可以只调两参方法connect(BluetoothDevice device, ConnectCallBack connectCallBack)
-                }, new BleNotifyCallBack() {
-                    @Override
-                    public void onNotifySuccess() {
-                        Log.i(TAG, "打开通知成功");
-                    }
+                           //低功耗蓝牙才需要BleNotifyCallBack
+                           //经典蓝牙可以只调两参方法connect(BluetoothDevice device, ConnectCallBack connectCallBack)
+                       }, new BleNotifyCallBack() {
+                           @Override
+                           public void onNotifySuccess() {
+                               Log.i(TAG, "打开通知成功");
+                           }
 
-                    @Override
-                    public void onNotifyFailure(BleException bleException) {
-                        Log.i(TAG, "打开通知失败：" + bleException.getMessage());
-                    }
-                });
+                           @Override
+                           public void onNotifyFailure(BluetoothException bleException) {
+                               Log.i(TAG, "打开通知失败：" + bleException.getMessage());
+                           }
+                       });
 
-5.设备连接成功后，你可以开始跟设备进行通信：
+6.设备连接成功后，你可以开始跟设备进行通信：
 
-               HBluetooth.getInstance(this)
-                                .sender()
-                                .send(new byte[]{0x01, 0x02}, new SendCallBack() {
-                            @Override
-                            public void onSending() {
-                                Log.i(TAG, "命令发送中...");
-                            }
+               HBluetooth.getInstance()
+                         .send(demoCommand, new SendCallBack() {
+                          @Override
+                          public void onSending(byte[] command) {
+                                 Log.i(TAG, "命令发送中...");
+                          }
 
-                            @Override
-                            public void onReceived(DataInputStream dataInputStream, byte[] result) {
-                                Log.i(TAG, "onReceived->" + dataInputStream + "-result->" + result);
-                            }
-                        });
+                          @Override
+                          public void onSendFailure(BluetoothException bleException) {
+                                 Log.e("mylog", "发送命令失败->" + bleException.getMessage());
+                          }
+                          });
 
- 6.最后，调用以下方法去主动断开连接并释放资源 ：
+
+7.那么如何接收蓝牙设备返回给你的数据呢，很简单，在Receiver中接收：
+
+              public void initListener() {
+                  HBluetooth.getInstance().setReceiver(new ReceiveCallBack() {
+                      @Override
+                      public void onReceived(DataInputStream dataInputStream, byte[] result) {
+                          // 打开通知后，设备发过来的数据将在这里出现
+                          Log.e("mylog", "收到蓝牙设备返回数据->" + Tools.bytesToHexString(result));
+                      }
+                  });
+              }
+
+
+7.最后，调用以下方法去主动断开连接并释放资源 ：
                 
-                HBluetooth.getInstance(this).release();
+                HBluetooth.getInstance().release();
