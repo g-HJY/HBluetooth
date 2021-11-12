@@ -1,6 +1,6 @@
 package com.hjy.bluetooth.inter;
 
-import com.hjy.bluetooth.exception.BleException;
+import com.hjy.bluetooth.exception.BluetoothException;
 
 /**
  * author : HJY
@@ -11,6 +11,6 @@ public interface BleNotifyCallBack {
 
     void onNotifySuccess();
 
-    void onNotifyFailure(BleException bleException);
+    void onNotifyFailure(BluetoothException bleException);
 
 }

@@ -4,11 +4,10 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
-import android.content.Context;
 import android.text.TextUtils;
 
 import com.hjy.bluetooth.HBluetooth;
-import com.hjy.bluetooth.exception.BleException;
+import com.hjy.bluetooth.exception.BluetoothException;
 import com.hjy.bluetooth.inter.BleNotifyCallBack;
 
 import java.util.UUID;
@@ -22,7 +21,7 @@ public class BleNotifier {
 
 
     //Open the ble notification
-    public static void openNotification(Context ctx, BluetoothGatt gatt, BluetoothGattService service, String notifyUUID,
+    public static void openNotification(BluetoothGatt gatt, BluetoothGattService service, String notifyUUID,
                                         BluetoothGattCharacteristic bluetoothGattCharacteristic, BleNotifyCallBack bleNotifyCallBack) {
         //Turn on the Android terminal to receive notifications
         BluetoothGattCharacteristic finalNotifyCharacteristic = null;
@@ -45,7 +44,7 @@ public class BleNotifier {
 
         if (!notifySuccess) {
             if (bleNotifyCallBack != null) {
-                bleNotifyCallBack.onNotifyFailure(new BleException(failureMsg));
+                bleNotifyCallBack.onNotifyFailure(new BluetoothException(failureMsg));
             }
             return;
         }
@@ -55,7 +54,7 @@ public class BleNotifier {
         //it can actively send data to the mobile phone
         BluetoothGattDescriptor descriptor = null;
         boolean useCharacteristicDescriptor = false;
-        HBluetooth.BleConfig bleConfig = HBluetooth.getInstance(ctx).getBleConfig();
+        HBluetooth.BleConfig bleConfig = HBluetooth.getInstance().getBleConfig();
         if (bleConfig != null) {
             useCharacteristicDescriptor = bleConfig.isUseCharacteristicDescriptor();
         }
@@ -68,13 +67,9 @@ public class BleNotifier {
         }
 
         if (descriptor != null) {
-            if (useCharacteristicDescriptor) {
-                descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                notifySuccess = gatt.writeDescriptor(descriptor);
-                failureMsg = "Write descriptor fail";
-            } else {
-                notifySuccess = true;
-            }
+            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+            notifySuccess = gatt.writeDescriptor(descriptor);
+            failureMsg = "Write descriptor fail";
         } else {
             notifySuccess = false;
             failureMsg = "Descriptor is null,please check whether support use characteristicDescriptor";
@@ -84,7 +79,7 @@ public class BleNotifier {
             if (notifySuccess) {
                 bleNotifyCallBack.onNotifySuccess();
             } else {
-                bleNotifyCallBack.onNotifyFailure(new BleException(failureMsg));
+                bleNotifyCallBack.onNotifyFailure(new BluetoothException(failureMsg));
             }
         }
     }

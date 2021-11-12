@@ -27,5 +27,5 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
     implementation project(':BluetoothLib')
-    //implementation 'com.github.g-HJY:HBluetooth:V1.0.6'
+    //implementation 'com.github.g-HJY:HBluetooth:V1.1.0'
 }

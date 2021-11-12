@@ -1,6 +1,6 @@
 package com.hjy.bluetooth.inter;
 
-import java.io.DataInputStream;
+import com.hjy.bluetooth.exception.BluetoothException;
 
 /**
  * Created by _H_JY on 2018/10/24.
@@ -8,7 +8,7 @@ import java.io.DataInputStream;
 
 public interface SendCallBack {
 
-    void onSending();
+    void onSending(byte[] command);
 
-    void onReceived(DataInputStream dataInputStream, byte[] result);
+    void onSendFailure(BluetoothException bleException);
 }

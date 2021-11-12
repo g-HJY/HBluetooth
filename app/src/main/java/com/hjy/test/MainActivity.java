@@ -10,10 +10,11 @@ import android.widget.Toast;
 
 import com.hjy.bluetooth.HBluetooth;
 import com.hjy.bluetooth.entity.BluetoothDevice;
-import com.hjy.bluetooth.exception.BleException;
+import com.hjy.bluetooth.exception.BluetoothException;
 import com.hjy.bluetooth.inter.BleMtuChangedCallback;
 import com.hjy.bluetooth.inter.BleNotifyCallBack;
 import com.hjy.bluetooth.inter.ConnectCallBack;
+import com.hjy.bluetooth.inter.ReceiveCallBack;
 import com.hjy.bluetooth.inter.ScanCallBack;
 import com.hjy.bluetooth.inter.SendCallBack;
 import com.hjy.bluetooth.operator.abstra.Sender;
@@ -47,19 +48,21 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(this);
 
-        mHBluetooth = HBluetooth.getInstance(this);
+        mHBluetooth = HBluetooth.getInstance();
 
         //请填写你自己设备的UUID
         //低功耗蓝牙才需要如下配置BleConfig,经典蓝牙不需要new HBluetooth.BleConfig()
         HBluetooth.BleConfig bleConfig = new HBluetooth.BleConfig();
-        bleConfig.withServiceUUID("0000fe61-0000-1000-8000-00805f9b34fb")
-                .withWriteCharacteristicUUID("0000fe61-0000-1000-8000-00805f9b34fb")
-                .withNotifyCharacteristicUUID("0000fe61-0000-1000-8000-00805f9b34fb")
-                //useCharacteristicDescriptor 默认为false
+        bleConfig.withServiceUUID("b973f2e0-b19e-11e2-9e96-0800200c9a66")
+                .withWriteCharacteristicUUID("e973f2e2-b19e-11e2-9e96-0800200c9a66")
+                .withNotifyCharacteristicUUID("d973f2e1-b19e-11e2-9e96-0800200c9a66")
+                //命令长度大于20个字节时是否分包发送，默认false,分包时可以调两参方法设置包之间发送间隔
+                //.splitPacketToSendWhenCmdLenBeyond20(false)
+                //useCharacteristicDescriptor 默认false
                 .useCharacteristicDescriptor(false)
                 .setMtu(200, new BleMtuChangedCallback() {
                     @Override
-                    public void onSetMTUFailure(int realMtuSize, BleException bleException) {
+                    public void onSetMTUFailure(int realMtuSize, BluetoothException bleException) {
                         Log.i(TAG, "bleException:" + bleException.getMessage() + "  realMtuSize:" + realMtuSize);
                     }
 
@@ -75,8 +78,20 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
                 .enableBluetooth()
                 //低功耗蓝牙才需要调setBleConfig
                 .setBleConfig(bleConfig);
+
+
+        initListener();
     }
 
+    public void initListener() {
+        HBluetooth.getInstance().setReceiver(new ReceiveCallBack() {
+            @Override
+            public void onReceived(DataInputStream dataInputStream, byte[] result) {
+                // 打开通知后，设备发过来的数据将在这里出现
+                Log.e("mylog", "收到蓝牙设备返回数据->" + Tools.bytesToHexString(result));
+            }
+        });
+    }
 
     @Override
     protected void onDestroy() {
@@ -158,59 +173,59 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
         BluetoothDevice device = list.get(i);
         //调用连接器连接蓝牙设备
-        mHBluetooth.connector()
-                .connect(device, new ConnectCallBack() {
+        mHBluetooth.connect(device, new ConnectCallBack() {
 
+            @Override
+            public void onConnecting() {
+                Log.i(TAG, "连接中...");
+            }
+
+            @Override
+            public void onConnected(Sender sender) {
+                Log.i(TAG, "连接成功,isConnected:" + mHBluetooth.isConnected());
+                //调用发送器发送命令
+                byte[] demoCommand = new byte[]{0x01, 0x02};
+                sender.send(demoCommand, new SendCallBack() {
                     @Override
-                    public void onConnecting() {
-                        Log.i(TAG, "连接中...");
+                    public void onSending(byte[] command) {
+                        Log.i(TAG, "命令发送中...");
                     }
 
                     @Override
-                    public void onConnected(Sender sender) {
-                        Log.i(TAG, "连接成功,isConnected:" + mHBluetooth.isConnected());
-                        //调用发送器发送命令
-                        sender.send(new byte[]{0x01, 0x02}, new SendCallBack() {
-                            @Override
-                            public void onSending() {
-                                Log.i(TAG, "命令发送中...");
-                            }
-
-                            @Override
-                            public void onReceived(DataInputStream dataInputStream, byte[] result) {
-                                Log.i(TAG, "onReceived->" + dataInputStream + "-result->" + Tools.bytesToHexString(result));
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void onDisConnecting() {
-                        Log.i(TAG, "断开连接中...");
-                    }
-
-                    @Override
-                    public void onDisConnected() {
-                        Log.i(TAG, "已断开连接,isConnected:" + mHBluetooth.isConnected());
-                    }
-
-                    @Override
-                    public void onError(int errorType, String errorMsg) {
-                        Log.i(TAG, "错误类型：" + errorType + " 错误原因：" + errorMsg);
-                    }
-
-                    //低功耗蓝牙才需要BleNotifyCallBack
-                    //经典蓝牙可以只调两参方法connect(BluetoothDevice device, ConnectCallBack connectCallBack)
-                }, new BleNotifyCallBack() {
-                    @Override
-                    public void onNotifySuccess() {
-                        Log.i(TAG, "打开通知成功");
-                    }
-
-                    @Override
-                    public void onNotifyFailure(BleException bleException) {
-                        Log.i(TAG, "打开通知失败：" + bleException.getMessage());
+                    public void onSendFailure(BluetoothException bleException) {
+                        Log.e("mylog", "发送命令失败->" + bleException.getMessage());
                     }
                 });
+            }
+
+            @Override
+            public void onDisConnecting() {
+                Log.i(TAG, "断开连接中...");
+            }
+
+            @Override
+            public void onDisConnected() {
+                Log.i(TAG, "已断开连接,isConnected:" + mHBluetooth.isConnected());
+            }
+
+            @Override
+            public void onError(int errorType, String errorMsg) {
+                Log.i(TAG, "错误类型：" + errorType + " 错误原因：" + errorMsg);
+            }
+
+            //低功耗蓝牙才需要BleNotifyCallBack
+            //经典蓝牙可以只调两参方法connect(BluetoothDevice device, ConnectCallBack connectCallBack)
+        }, new BleNotifyCallBack() {
+            @Override
+            public void onNotifySuccess() {
+                Log.i(TAG, "打开通知成功");
+            }
+
+            @Override
+            public void onNotifyFailure(BluetoothException bleException) {
+                Log.i(TAG, "打开通知失败：" + bleException.getMessage());
+            }
+        });
     }
 
 

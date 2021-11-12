@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.content.BroadcastReceiver;
@@ -18,10 +19,11 @@ import android.text.TextUtils;
 import com.hjy.bluetooth.HBluetooth;
 import com.hjy.bluetooth.async.BluetoothConnectAsyncTask;
 import com.hjy.bluetooth.constant.BluetoothState;
-import com.hjy.bluetooth.exception.BleException;
+import com.hjy.bluetooth.exception.BluetoothException;
 import com.hjy.bluetooth.inter.BleMtuChangedCallback;
 import com.hjy.bluetooth.inter.BleNotifyCallBack;
 import com.hjy.bluetooth.inter.ConnectCallBack;
+import com.hjy.bluetooth.inter.ReceiveCallBack;
 import com.hjy.bluetooth.inter.SendCallBack;
 import com.hjy.bluetooth.operator.abstra.Connector;
 import com.hjy.bluetooth.operator.abstra.Sender;
@@ -57,7 +59,7 @@ public class BluetoothConnector extends Connector {
     public synchronized void connect(com.hjy.bluetooth.entity.BluetoothDevice device, final ConnectCallBack connectCallBack) {
         this.connectCallBack = connectCallBack;
         cancelConnectAsyncTask();
-        HBluetooth hBluetooth = HBluetooth.getInstance(mContext);
+        HBluetooth hBluetooth = HBluetooth.getInstance();
         hBluetooth.destroyChannel();
         hBluetooth.cancelScan();
 
@@ -124,7 +126,7 @@ public class BluetoothConnector extends Connector {
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             super.onConnectionStateChange(gatt, status, newState);
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                HBluetooth hBluetooth = HBluetooth.getInstance(mContext);
+                HBluetooth hBluetooth = HBluetooth.getInstance();
                 hBluetooth.setConnected(true);
                 Sender sender = hBluetooth.sender();
                 if (sender != null) {
@@ -143,14 +145,13 @@ public class BluetoothConnector extends Connector {
                 }
 
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                HBluetooth.getInstance(mContext).setConnected(false);
+                HBluetooth.getInstance().setConnected(false);
                 if (gatt != null) {
                     gatt.close();
                 }
                 if (connectCallBack != null) {
                     connectCallBack.onDisConnected();
                 }
-
             } else if (newState == BluetoothProfile.STATE_DISCONNECTING) {
                 if (connectCallBack != null) {
                     connectCallBack.onDisConnecting();
@@ -164,7 +165,7 @@ public class BluetoothConnector extends Connector {
             super.onServicesDiscovered(gatt, status);
 
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                HBluetooth hBluetooth = HBluetooth.getInstance(mContext);
+                HBluetooth hBluetooth = HBluetooth.getInstance();
                 HBluetooth.BleConfig bleConfig = hBluetooth.getBleConfig();
                 int mtuSize = 0;
                 String mainServiceUUID = null, writeCharacteristicUUID = null, notifyUUID = null;
@@ -194,13 +195,13 @@ public class BluetoothConnector extends Connector {
                             hBluetooth.sender().initSenderHelper(writeCharacteristic);
                         } else {
                             if (bleNotifyCallBack != null) {
-                                bleNotifyCallBack.onNotifyFailure(new BleException("WriteCharacteristic is null,please check the writeCharacteristicUUID whether right"));
+                                bleNotifyCallBack.onNotifyFailure(new BluetoothException("WriteCharacteristic is null,please check the writeCharacteristicUUID whether right"));
                             }
                         }
-                        BleNotifier.openNotification(mContext, gatt, service, notifyUUID, writeCharacteristic, bleNotifyCallBack);
+                        BleNotifier.openNotification(gatt, service, notifyUUID, writeCharacteristic, bleNotifyCallBack);
                     } else {
                         if (bleNotifyCallBack != null) {
-                            bleNotifyCallBack.onNotifyFailure(new BleException("Main bluetoothGattService is null,please check the serviceUUID whether right"));
+                            bleNotifyCallBack.onNotifyFailure(new BluetoothException("Main bluetoothGattService is null,please check the serviceUUID whether right"));
                         }
                     }
                 } else {
@@ -212,8 +213,8 @@ public class BluetoothConnector extends Connector {
                                 for (int k = 0; k < characteristics.size(); k++) {
                                     BluetoothGattCharacteristic bluetoothGattCharacteristic = characteristics.get(k);
                                     if (writeCharacteristicUUID.equals(bluetoothGattCharacteristic.getUuid().toString())) {
-                                        HBluetooth.getInstance(mContext).sender().initSenderHelper(bluetoothGattCharacteristic);
-                                        BleNotifier.openNotification(mContext, gatt, services.get(i), notifyUUID, bluetoothGattCharacteristic, bleNotifyCallBack);
+                                        hBluetooth.sender().initSenderHelper(bluetoothGattCharacteristic);
+                                        BleNotifier.openNotification(gatt, services.get(i), notifyUUID, bluetoothGattCharacteristic, bleNotifyCallBack);
                                     }
                                 }
                             }
@@ -227,7 +228,7 @@ public class BluetoothConnector extends Connector {
         @Override
         public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
             super.onMtuChanged(gatt, mtu, status);
-            HBluetooth.BleConfig bleConfig = HBluetooth.getInstance(mContext).getBleConfig();
+            HBluetooth.BleConfig bleConfig = HBluetooth.getInstance().getBleConfig();
             int mtuSize = 0;
             BleMtuChangedCallback callback = null;
             if (bleConfig != null) {
@@ -239,7 +240,7 @@ public class BluetoothConnector extends Connector {
                 if (BluetoothGatt.GATT_SUCCESS == status && mtuSize == mtu) {
                     callback.onMtuChanged(mtu);
                 } else {
-                    callback.onSetMTUFailure(mtu, new BleException("MTU change failed!"));
+                    callback.onSetMTUFailure(mtu, new BluetoothException("MTU change failed!"));
                 }
             }
         }
@@ -248,9 +249,26 @@ public class BluetoothConnector extends Connector {
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicChanged(gatt, characteristic);
             byte[] result = characteristic.getValue();
-            if (sendCallBack != null) {
-                sendCallBack.onReceived(null, result);
+            ReceiveCallBack receiveCallBack = HBluetooth.getInstance().receiver().getReceiveCallBack();
+            if (receiveCallBack != null) {
+                receiveCallBack.onReceived(null, result);
             }
+
+        }
+
+        @Override
+        public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+            super.onDescriptorWrite(gatt, descriptor, status);
+        }
+
+        @Override
+        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            super.onCharacteristicWrite(gatt, characteristic, status);
+        }
+
+        @Override
+        public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            super.onCharacteristicRead(gatt, characteristic, status);
         }
     };
 

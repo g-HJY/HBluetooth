@@ -87,7 +87,7 @@ public class BluetoothConnectAsyncTask extends WeakAsyncTask<Void, Void, Integer
                 }
             }
 
-            HBluetooth hBluetooth = HBluetooth.getInstance(mContext);
+            HBluetooth hBluetooth = HBluetooth.getInstance();
             hBluetooth.setConnected(bluetoothSocket.isConnected());
             if (bluetoothSocket.isConnected()) {
                 sender = hBluetooth.sender();
@@ -129,7 +129,7 @@ public class BluetoothConnectAsyncTask extends WeakAsyncTask<Void, Void, Integer
         @Override
         public void onReceive(Context context, Intent intent) {
             if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(intent.getAction())) {
-                HBluetooth.getInstance(mContext).setConnected(false);
+                HBluetooth.getInstance().setConnected(false);
                 if (connectCallBack != null) {
                     connectCallBack.onDisConnected();
                 }

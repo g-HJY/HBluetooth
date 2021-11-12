@@ -1,6 +1,6 @@
 package com.hjy.bluetooth.inter;
 
-import com.hjy.bluetooth.exception.BleException;
+import com.hjy.bluetooth.exception.BluetoothException;
 
 /**
  * author : HJY
@@ -9,7 +9,7 @@ import com.hjy.bluetooth.exception.BleException;
  */
 public interface BleMtuChangedCallback {
 
-      void onSetMTUFailure(int realMtuSize,BleException bleException);
+      void onSetMTUFailure(int realMtuSize, BluetoothException bleException);
 
       void onMtuChanged(int mtuSize);
 
