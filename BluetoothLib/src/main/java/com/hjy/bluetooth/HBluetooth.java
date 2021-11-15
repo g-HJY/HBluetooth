@@ -7,6 +7,7 @@ import android.content.Context;
 import android.support.annotation.IntDef;
 
 import com.hjy.bluetooth.constant.ValueLimit;
+import com.hjy.bluetooth.entity.ScanFilter;
 import com.hjy.bluetooth.exception.BluetoothException;
 import com.hjy.bluetooth.inter.BleMtuChangedCallback;
 import com.hjy.bluetooth.inter.BleNotifyCallBack;
@@ -84,6 +85,7 @@ public class HBluetooth {
         scanner = new BluetoothScanner(mContext, mAdapter);
         connector = new BluetoothConnector(mContext, mAdapter);
         sender = new BluetoothSender();
+
         receiver = new BluetoothReceiver();
 
         return this;
@@ -102,6 +104,31 @@ public class HBluetooth {
 
     public void scan(@BluetoothType int scanType, int timeUse, ScanCallBack scanCallBack) {
         if (scanner != null) {
+            scanner.scan(scanType, timeUse, scanCallBack);
+        }
+    }
+
+    /**
+     * @param scanType
+     * @param filter       Accurate or fuzzy matching scanning according to the device name
+     * @param scanCallBack
+     */
+    public void scan(@BluetoothType int scanType, ScanFilter filter, ScanCallBack scanCallBack) {
+        if (scanner != null) {
+            scanner.setFilter(filter);
+            scanner.scan(scanType, scanCallBack);
+        }
+    }
+
+    /**
+     * @param scanType
+     * @param timeUse
+     * @param filter       Accurate or fuzzy matching scanning according to the device name
+     * @param scanCallBack
+     */
+    public void scan(@BluetoothType int scanType, int timeUse, ScanFilter filter, ScanCallBack scanCallBack) {
+        if (scanner != null) {
+            scanner.setFilter(filter);
             scanner.scan(scanType, timeUse, scanCallBack);
         }
     }
@@ -154,7 +181,6 @@ public class HBluetooth {
     }
 
     public Receiver setReceiver(ReceiveCallBack receiveCallBack) {
-        checkIfEnableBluetoothFirst();
         if (receiver != null) {
             receiver.setReceiveCallBack(receiveCallBack);
         }
@@ -190,10 +216,13 @@ public class HBluetooth {
     }
 
 
+    /**
+     * The config only for ble
+     */
     public static class BleConfig {
         private String serviceUUID, writeCharacteristicUUID, notifyCharacteristicUUID;
         private boolean useCharacteristicDescriptor;
-        private int     mtuSize, sendTimeInterval = 20;
+        private int     mtuSize, sendTimeInterval = 20, eachSplitPacketLen = BluetoothSender.BLE_ONCE_PACK_SIZE_LIMIT;
         private boolean               splitPacketToSendWhenCmdLenBeyond20;
         private BleMtuChangedCallback mBleMtuChangedCallback;
 
@@ -218,8 +247,10 @@ public class HBluetooth {
         }
 
         /**
-         * @param splitPacketToSendWhenCmdLenBeyond20  default value = false
+         * @param splitPacketToSendWhenCmdLenBeyond20 default value = false
          * @param sendTimeInterval                    unit is ms,default value = 20ms
+         *                                            The time interval of subcontracting sending shall not be less than 20ms to avoid sending failure
+         *                                            The default length of each subcontract is 20 bytes
          * @return
          */
         public BleConfig splitPacketToSendWhenCmdLenBeyond20(boolean splitPacketToSendWhenCmdLenBeyond20, int sendTimeInterval) {
@@ -228,9 +259,17 @@ public class HBluetooth {
             return this;
         }
 
+        public BleConfig splitPacketToSendWhenCmdLenBeyond20(boolean splitPacketToSendWhenCmdLenBeyond20, int sendTimeInterval, int eachSplitPacketLen) {
+            this.splitPacketToSendWhenCmdLenBeyond20 = splitPacketToSendWhenCmdLenBeyond20;
+            this.sendTimeInterval = sendTimeInterval;
+            this.eachSplitPacketLen = eachSplitPacketLen;
+            return this;
+        }
+
         /**
          * @param splitPacketToSendWhenCmdLenBeyond20 default value = false
-         *  sendTimeInterval's unit is ms,default value = 20ms
+         *                                            sendTimeInterval's unit is ms,default value = 20ms
+         *                                            The default length of each subcontract is 20 bytes
          * @return
          */
         public BleConfig splitPacketToSendWhenCmdLenBeyond20(boolean splitPacketToSendWhenCmdLenBeyond20) {
@@ -268,6 +307,10 @@ public class HBluetooth {
 
         public int getSendTimeInterval() {
             return sendTimeInterval;
+        }
+
+        public int getEachSplitPacketLen() {
+            return eachSplitPacketLen;
         }
 
         public String getServiceUUID() {

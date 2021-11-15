@@ -17,6 +17,7 @@ import android.support.annotation.RequiresApi;
 import com.hjy.bluetooth.entity.BluetoothDevice;
 import com.hjy.bluetooth.inter.ScanCallBack;
 import com.hjy.bluetooth.operator.abstra.Scanner;
+import com.hjy.bluetooth.utils.ScanFilterUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +28,7 @@ import java.util.List;
 public class BluetoothScanner extends Scanner {
 
     private int                   scanType;
-    private boolean isScanning;
+    private boolean               isScanning;
     private Context               mContext;
     private ScanCallBack          scanCallBack;
     private BluetoothLeScanner    bluetoothLeScanner;
@@ -143,6 +144,12 @@ public class BluetoothScanner extends Scanner {
                 // Get the BluetoothDevice object from the Intent
                 android.bluetooth.BluetoothDevice device = intent
                         .getParcelableExtra(android.bluetooth.BluetoothDevice.EXTRA_DEVICE);
+
+                //If there is filtering, filter the scanning results
+                if (getFilter() != null && !ScanFilterUtils.isInFilter(device.getName(), getFilter())) {
+                    return;
+                }
+
                 // new device found
                 BluetoothDevice bluetoothDevice = new BluetoothDevice();
                 if (device.getBondState() != android.bluetooth.BluetoothDevice.BOND_BONDED) {
@@ -184,6 +191,11 @@ public class BluetoothScanner extends Scanner {
         @Override
         public void onLeScan(android.bluetooth.BluetoothDevice bluetoothDevice, int i, byte[] bytes) {
 
+            //If there is filtering, filter the scanning results
+            if (getFilter() != null && !ScanFilterUtils.isInFilter(bluetoothDevice.getName(), getFilter())) {
+                return;
+            }
+
             final BluetoothDevice device = new BluetoothDevice();
             device.setName(bluetoothDevice.getName());
             device.setAddress(bluetoothDevice.getAddress());
@@ -205,7 +217,7 @@ public class BluetoothScanner extends Scanner {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        scanCallBack.onScanning(bluetoothDevices,device);
+                        scanCallBack.onScanning(bluetoothDevices, device);
                     }
                 });
             }
@@ -220,6 +232,11 @@ public class BluetoothScanner extends Scanner {
         public void onScanResult(int callbackType, ScanResult result) {
             super.onScanResult(callbackType, result);
             android.bluetooth.BluetoothDevice bluetoothDevice = result.getDevice();
+            //If there is filtering, filter the scanning results
+            if (getFilter() != null && !ScanFilterUtils.isInFilter(bluetoothDevice.getName(), getFilter())) {
+                return;
+            }
+
             final BluetoothDevice device = new BluetoothDevice();
             device.setName(bluetoothDevice.getName());
             device.setAddress(bluetoothDevice.getAddress());
@@ -243,7 +260,7 @@ public class BluetoothScanner extends Scanner {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        scanCallBack.onScanning(bluetoothDevices,device);
+                        scanCallBack.onScanning(bluetoothDevices, device);
                     }
                 });
             }
@@ -279,7 +296,7 @@ public class BluetoothScanner extends Scanner {
             }
         }
 
-        if(isScanning){
+        if (isScanning) {
             if (scanCallBack != null) {
                 if (handler == null) {
                     handler = new Handler(Looper.getMainLooper());

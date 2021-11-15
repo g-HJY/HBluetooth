@@ -59,7 +59,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
                 //命令长度大于20个字节时是否分包发送，默认false,分包时可以调两参方法设置包之间发送间隔
                 //.splitPacketToSendWhenCmdLenBeyond20(false)
                 //useCharacteristicDescriptor 默认false
-                .useCharacteristicDescriptor(false)
+                //.useCharacteristicDescriptor(false)
                 .setMtu(200, new BleMtuChangedCallback() {
                     @Override
                     public void onSetMTUFailure(int realMtuSize, BluetoothException bleException) {

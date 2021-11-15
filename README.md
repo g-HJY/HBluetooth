@@ -19,7 +19,7 @@ Add it in your root build.gradle at the end of repositories:
  Step 2. Add the dependency
 
 	dependencies {
-	     implementation 'com.github.g-HJY:HBluetooth:V1.1.0'
+	     implementation 'com.github.g-HJY:HBluetooth:V1.2.0'
 	}
 
 
@@ -45,9 +45,10 @@ Add it in your root build.gradle at the end of repositories:
 
 
 
-3.如果是低功耗蓝牙，需要设置配置项，经典蓝牙忽略跳过即可：
+3.如果是低功耗蓝牙，需要设置配置项，经典蓝牙忽略跳过这一步即可：
 
-分别是主服务UUID（withServiceUUID）、读写特征值UUID（withWriteCharacteristicUUID）、通知UUID（withNotifyCharacteristicUUID）以及是否设置最大传输单元（setMtu不设置不用调）等
+分别是主服务UUID（withServiceUUID）、读写特征值UUID（withWriteCharacteristicUUID）、通知UUID（withNotifyCharacteristicUUID）以及是否设置最大传输单元（setMtu不设置不用调）等；
+您还可以设置分包发送的时间间隔和包长度
 
 	     //请填写你自己设备的UUID
             //低功耗蓝牙才需要如下配置BleConfig,经典蓝牙不需要new HBluetooth.BleConfig()
@@ -58,7 +59,7 @@ Add it in your root build.gradle at the end of repositories:
                     //命令长度大于20个字节时是否分包发送，默认false,分包时可以调两参方法设置包之间发送间隔
                     //.splitPacketToSendWhenCmdLenBeyond20(false)
                     //useCharacteristicDescriptor 默认false
-                    .useCharacteristicDescriptor(false)
+                    //.useCharacteristicDescriptor(false)
                     .setMtu(200, new BleMtuChangedCallback() {
                         @Override
                         public void onSetMTUFailure(int realMtuSize, BluetoothException bleException) {
@@ -224,6 +225,23 @@ Add it in your root build.gradle at the end of repositories:
               }
 
 
-7.最后，调用以下方法去主动断开连接并释放资源 ：
+8.最后，调用以下方法去主动断开连接并释放资源 ：
                 
                 HBluetooth.getInstance().release();
+
+
+
+
+#更多方法Api介绍：
+1.带设备名称过滤条件的扫描：
+
+ public void scan(@BluetoothType int scanType, int timeUse, ScanFilter filter, ScanCallBack scanCallBack);
+
+ public void scan(@BluetoothType int scanType, ScanFilter filter, ScanCallBack scanCallBack);
+
+
+2.BleConfig(BLE)设置分包发送时间间隔(默认20ms)及包长度(默认20个字节)：
+
+ public BleConfig splitPacketToSendWhenCmdLenBeyond20(boolean splitPacketToSendWhenCmdLenBeyond20, int sendTimeInterval);
+
+ public BleConfig splitPacketToSendWhenCmdLenBeyond20(boolean splitPacketToSendWhenCmdLenBeyond20, int sendTimeInterval, int eachSplitPacketLen);

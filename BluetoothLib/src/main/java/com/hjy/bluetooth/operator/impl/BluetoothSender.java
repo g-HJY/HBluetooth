@@ -158,12 +158,12 @@ public class BluetoothSender extends Sender {
 
                         } catch (IOException e) {
                             e.printStackTrace();
-                            if(sendCallBack != null){
+                            if (sendCallBack != null) {
                                 sendCallBack.onSendFailure(new BluetoothException("Bluetooth socket write IOException"));
                             }
                         } catch (InterruptedException e) {
                             e.printStackTrace();
-                            if(sendCallBack != null){
+                            if (sendCallBack != null) {
                                 sendCallBack.onSendFailure(new BluetoothException("Bluetooth socket write InterruptedException"));
                             }
                         } finally {
@@ -182,16 +182,17 @@ public class BluetoothSender extends Sender {
                     mBleConfig = HBluetooth.getInstance().getBleConfig();
                 }
                 boolean splitPacketToSendWhenCmdLenBeyond20 = false;
-                int sendTimeInterval = 0;
+                int sendTimeInterval = 0, splitLen = BLE_ONCE_PACK_SIZE_LIMIT;
                 if (mBleConfig != null) {
                     splitPacketToSendWhenCmdLenBeyond20 = mBleConfig.isSplitPacketToSendWhenCmdLenBeyond20();
                     sendTimeInterval = mBleConfig.getSendTimeInterval();
+                    splitLen = mBleConfig.getEachSplitPacketLen();
                 }
 
 
-                if (command.length > BLE_ONCE_PACK_SIZE_LIMIT && splitPacketToSendWhenCmdLenBeyond20) {
+                if (splitPacketToSendWhenCmdLenBeyond20 && command.length > splitLen) {
                     //Split packet to send
-                    Object[] objects = ArrayUtils.splitBytes(command, BLE_ONCE_PACK_SIZE_LIMIT);
+                    Object[] objects = ArrayUtils.splitBytes(command, splitLen);
                     for (Object object : objects) {
                         byte[] onceCmd = (byte[]) object;
                         gattSendCmdWithCallBack(onceCmd, sendCallBack);
@@ -220,7 +221,7 @@ public class BluetoothSender extends Sender {
             sendCallBack.onSending(command);
         }
         if (!mGatt.writeCharacteristic(characteristic) && sendCallBack != null) {
-            sendCallBack.onSendFailure(new BluetoothException("Gatt writeCharacteristic fail,please check command or change the value of splitPacketToSendWhenCmdLenBeyond20 if you have set"));
+            sendCallBack.onSendFailure(new BluetoothException("Gatt writeCharacteristic fail, please check command or change the value of sendTimeInterval if you have set it"));
         }
     }
 
