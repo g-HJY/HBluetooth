@@ -234,6 +234,7 @@ Add it in your root build.gradle at the end of repositories:
 
 
 
+
 # 更多方法Api介绍：
 
 1.带设备名称过滤条件的扫描：
