@@ -11,4 +11,5 @@ import com.hjy.bluetooth.inter.ReceiveCallBack;
 public abstract class Receiver {
     public abstract void setReceiveCallBack(ReceiveCallBack receiveCallBack);
     public abstract ReceiveCallBack getReceiveCallBack();
+    public abstract void resetCallBack();
 }

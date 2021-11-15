@@ -151,6 +151,20 @@ public class HBluetooth {
         }
     }
 
+    private void resetCallBack() {
+        if (sender != null) {
+            sender.resetCallBack();
+        }
+
+        if (receiver != null) {
+            receiver.resetCallBack();
+        }
+
+        if (scanner != null) {
+            scanner.resetCallBack();
+        }
+    }
+
 
     public void connect(com.hjy.bluetooth.entity.BluetoothDevice bluetoothDevice, ConnectCallBack connectCallBack) {
         if (connector != null) {
@@ -221,9 +235,11 @@ public class HBluetooth {
      */
     public static class BleConfig {
         private String serviceUUID, writeCharacteristicUUID, notifyCharacteristicUUID;
-        private boolean useCharacteristicDescriptor;
-        private int     mtuSize, sendTimeInterval = 20, eachSplitPacketLen = BluetoothSender.BLE_ONCE_PACK_SIZE_LIMIT;
-        private boolean               splitPacketToSendWhenCmdLenBeyond20;
+        private boolean               useCharacteristicDescriptor;
+        private int                   mtuSize;
+        private int                   sendTimeInterval   = 20;
+        private int                   eachSplitPacketLen = 20;
+        private boolean               splitPacketToSendWhenCmdLenBeyond;
         private BleMtuChangedCallback mBleMtuChangedCallback;
 
         public BleConfig withServiceUUID(String serviceUUID) {
@@ -247,33 +263,33 @@ public class HBluetooth {
         }
 
         /**
-         * @param splitPacketToSendWhenCmdLenBeyond20 default value = false
-         * @param sendTimeInterval                    unit is ms,default value = 20ms
-         *                                            The time interval of subcontracting sending shall not be less than 20ms to avoid sending failure
-         *                                            The default length of each subcontract is 20 bytes
+         * @param splitPacketToSendWhenCmdLenBeyond default value = false
+         * @param sendTimeInterval                  unit is ms,default value = 20ms
+         *                                          The time interval of subcontracting sending shall not be less than 20ms to avoid sending failure
+         *                                          The default length of each subcontract is 20 bytes
          * @return
          */
-        public BleConfig splitPacketToSendWhenCmdLenBeyond20(boolean splitPacketToSendWhenCmdLenBeyond20, int sendTimeInterval) {
-            this.splitPacketToSendWhenCmdLenBeyond20 = splitPacketToSendWhenCmdLenBeyond20;
+        public BleConfig splitPacketToSendWhenCmdLenBeyond(boolean splitPacketToSendWhenCmdLenBeyond, int sendTimeInterval) {
+            this.splitPacketToSendWhenCmdLenBeyond = splitPacketToSendWhenCmdLenBeyond;
             this.sendTimeInterval = sendTimeInterval;
             return this;
         }
 
-        public BleConfig splitPacketToSendWhenCmdLenBeyond20(boolean splitPacketToSendWhenCmdLenBeyond20, int sendTimeInterval, int eachSplitPacketLen) {
-            this.splitPacketToSendWhenCmdLenBeyond20 = splitPacketToSendWhenCmdLenBeyond20;
+        public BleConfig splitPacketToSendWhenCmdLenBeyond(boolean splitPacketToSendWhenCmdLenBeyond, int sendTimeInterval, int eachSplitPacketLen) {
+            this.splitPacketToSendWhenCmdLenBeyond = splitPacketToSendWhenCmdLenBeyond;
             this.sendTimeInterval = sendTimeInterval;
             this.eachSplitPacketLen = eachSplitPacketLen;
             return this;
         }
 
         /**
-         * @param splitPacketToSendWhenCmdLenBeyond20 default value = false
-         *                                            sendTimeInterval's unit is ms,default value = 20ms
-         *                                            The default length of each subcontract is 20 bytes
+         * @param splitPacketToSendWhenCmdLenBeyond default value = false
+         *                                          sendTimeInterval's unit is ms,default value = 20ms
+         *                                          The default length of each subcontract is 20 bytes
          * @return
          */
-        public BleConfig splitPacketToSendWhenCmdLenBeyond20(boolean splitPacketToSendWhenCmdLenBeyond20) {
-            this.splitPacketToSendWhenCmdLenBeyond20 = splitPacketToSendWhenCmdLenBeyond20;
+        public BleConfig splitPacketToSendWhenCmdLenBeyond(boolean splitPacketToSendWhenCmdLenBeyond) {
+            this.splitPacketToSendWhenCmdLenBeyond = splitPacketToSendWhenCmdLenBeyond;
             return this;
         }
 
@@ -301,8 +317,8 @@ public class HBluetooth {
             return this;
         }
 
-        public boolean isSplitPacketToSendWhenCmdLenBeyond20() {
-            return splitPacketToSendWhenCmdLenBeyond20;
+        public boolean isSplitPacketToSendWhenCmdLenBeyond() {
+            return splitPacketToSendWhenCmdLenBeyond;
         }
 
         public int getSendTimeInterval() {
@@ -342,6 +358,7 @@ public class HBluetooth {
     public synchronized void release() {
         cancelScan();
         destroyChannel();
+        resetCallBack();
     }
 
 

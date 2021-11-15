@@ -1,5 +1,7 @@
 package com.hjy.bluetooth.operator.impl;
 
+import android.bluetooth.BluetoothGattDescriptor;
+
 import com.hjy.bluetooth.inter.ReceiveCallBack;
 import com.hjy.bluetooth.operator.abstra.Receiver;
 
@@ -11,6 +13,7 @@ import com.hjy.bluetooth.operator.abstra.Receiver;
 public class BluetoothReceiver extends Receiver {
 
     private ReceiveCallBack receiveCallBack;
+    private BluetoothGattDescriptor finalNotifyDescriptor;
 
     @Override
     public void setReceiveCallBack(ReceiveCallBack receiveCallBack) {
@@ -20,5 +23,18 @@ public class BluetoothReceiver extends Receiver {
     @Override
     public ReceiveCallBack getReceiveCallBack() {
         return this.receiveCallBack;
+    }
+
+    @Override
+    public void resetCallBack() {
+        receiveCallBack = null;
+    }
+
+    public void setFinalNotifyDescriptor(BluetoothGattDescriptor finalNotifyDescriptor) {
+        this.finalNotifyDescriptor = finalNotifyDescriptor;
+    }
+
+    public BluetoothGattDescriptor getFinalNotifyDescriptor() {
+        return finalNotifyDescriptor;
     }
 }

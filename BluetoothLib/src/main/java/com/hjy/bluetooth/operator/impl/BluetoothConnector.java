@@ -23,7 +23,6 @@ import com.hjy.bluetooth.inter.BleMtuChangedCallback;
 import com.hjy.bluetooth.inter.BleNotifyCallBack;
 import com.hjy.bluetooth.inter.ConnectCallBack;
 import com.hjy.bluetooth.inter.ReceiveCallBack;
-import com.hjy.bluetooth.inter.SendCallBack;
 import com.hjy.bluetooth.operator.abstra.Connector;
 import com.hjy.bluetooth.operator.abstra.Sender;
 import com.hjy.bluetooth.utils.BleNotifier;
@@ -42,7 +41,6 @@ public class BluetoothConnector extends Connector {
     private BluetoothConnectAsyncTask connectAsyncTask;
     private ConnectCallBack           connectCallBack;
     private BleNotifyCallBack         bleNotifyCallBack;
-    private SendCallBack              sendCallBack;
 
 
     private BluetoothConnector() {
@@ -109,10 +107,6 @@ public class BluetoothConnector extends Connector {
     }
 
 
-    public void setSendCallBack(SendCallBack sendCallBack) {
-        this.sendCallBack = sendCallBack;
-    }
-
     protected void cancelConnectAsyncTask() {
         if (connectAsyncTask != null && connectAsyncTask.getStatus() == AsyncTask.Status.RUNNING) {
             connectAsyncTask.cancel(true);
@@ -150,6 +144,7 @@ public class BluetoothConnector extends Connector {
                 }
                 if (connectCallBack != null) {
                     connectCallBack.onDisConnected();
+                    connectCallBack = null;
                 }
             } else if (newState == BluetoothProfile.STATE_DISCONNECTING) {
                 if (connectCallBack != null) {

@@ -18,4 +18,6 @@ public abstract class Sender {
 
     public abstract void destroyChannel();
 
+    public abstract void resetCallBack();
+
 }

@@ -57,7 +57,7 @@ Add it in your root build.gradle at the end of repositories:
                      .withWriteCharacteristicUUID("0000fe61-0000-1000-8000-00805f9b34fb")
                      .withNotifyCharacteristicUUID("0000fe61-0000-1000-8000-00805f9b34fb")
                     //命令长度大于20个字节时是否分包发送，默认false,分包时可以调两参方法设置包之间发送间隔
-                    //.splitPacketToSendWhenCmdLenBeyond20(false)
+                    //.splitPacketToSendWhenCmdLenBeyond(false)
                     //useCharacteristicDescriptor 默认false
                     //.useCharacteristicDescriptor(false)
                     .setMtu(200, new BleMtuChangedCallback() {
@@ -246,6 +246,6 @@ Add it in your root build.gradle at the end of repositories:
 
 2.BleConfig(BLE)设置分包发送时间间隔(默认20ms)及包长度(默认20个字节)：
 
- public BleConfig splitPacketToSendWhenCmdLenBeyond20(boolean splitPacketToSendWhenCmdLenBeyond20, int sendTimeInterval);
+ public BleConfig splitPacketToSendWhenCmdLenBeyond(boolean splitPacketToSendWhenCmdLenBeyond, int sendTimeInterval);
 
- public BleConfig splitPacketToSendWhenCmdLenBeyond20(boolean splitPacketToSendWhenCmdLenBeyond20, int sendTimeInterval, int eachSplitPacketLen);
+ public BleConfig splitPacketToSendWhenCmdLenBeyond(boolean splitPacketToSendWhenCmdLenBeyond, int sendTimeInterval, int eachSplitPacketLen);

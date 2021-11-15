@@ -312,6 +312,11 @@ public class BluetoothScanner extends Scanner {
         }
     }
 
+    @Override
+    public void resetCallBack() {
+        scanCallBack = null;
+    }
+
 
     private void unregisterReceiver() {
         try {

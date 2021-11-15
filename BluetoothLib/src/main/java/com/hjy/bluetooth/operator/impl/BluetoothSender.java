@@ -2,6 +2,7 @@ package com.hjy.bluetooth.operator.impl;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothSocket;
 import android.os.AsyncTask;
 
@@ -13,12 +14,15 @@ import com.hjy.bluetooth.inter.ReceiveCallBack;
 import com.hjy.bluetooth.inter.SendCallBack;
 import com.hjy.bluetooth.operator.abstra.Sender;
 import com.hjy.bluetooth.utils.ArrayUtils;
+import com.hjy.bluetooth.utils.BleNotifier;
 import com.hjy.bluetooth.utils.LockStore;
 
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
+import java.util.UUID;
 
 /**
  * Created by _H_JY on 2018/10/22.
@@ -30,10 +34,10 @@ public class BluetoothSender extends Sender {
     private              BluetoothGattCharacteristic characteristic;
     private              BluetoothConnector          connector;
     private              ConnectCallBack             connectCallBack;
+    private              SendCallBack                sendCallBack;
     private              int                         type;
     private              HBluetooth.BleConfig        mBleConfig;
-    public final static  int                         BLE_ONCE_PACK_SIZE_LIMIT = 20;
-    private final static String                      LOCK_NAME                = "SendCmdLock";
+    private final static String                      LOCK_NAME = "SendCmdLock";
 
 
     public BluetoothSocket getSocket() {
@@ -89,23 +93,45 @@ public class BluetoothSender extends Sender {
         if (connector != null) {
             connector.cancelConnectAsyncTask();
         }
+        //Classic bluetooth disconnect
         if (mSocket != null) {
             try {
                 mSocket.close();
                 mSocket = null;
                 if (connectCallBack != null) {
                     connectCallBack.onDisConnected();
+                    connectCallBack = null;
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
+        //Ble disconnect
         if (mGatt != null) {
-            //will go to onConnectionStateChange()，and call gatt.close() to release
+            //Close ble notification
+            BleNotifier.closeNotification();
+            //Will go to onConnectionStateChange()，and call gatt.close() to release
             mGatt.disconnect();
+            refreshGattCache();
         }
 
+    }
+
+    @Override
+    public void resetCallBack() {
+        sendCallBack = null;
+    }
+
+    private synchronized void refreshGattCache() {
+        try {
+            final Method method = BluetoothGatt.class.getMethod("refresh");
+            if (method != null && mGatt != null) {
+                method.invoke(mGatt);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public BluetoothGatt getGatt() {
@@ -114,8 +140,10 @@ public class BluetoothSender extends Sender {
 
     @Override
     public void send(final byte[] command, final SendCallBack sendCallBack) {
+        this.sendCallBack = sendCallBack;
         if (LockStore.getLock(LOCK_NAME)) {
             if (mSocket != null && type == BluetoothDevice.DEVICE_TYPE_CLASSIC) {
+                //Classic bluetooth send command
                 AsyncTask.SERIAL_EXECUTOR.execute(new Runnable() {
                     @Override
                     public void run() {
@@ -172,31 +200,29 @@ public class BluetoothSender extends Sender {
                     }
                 });
             } else if (mGatt != null && characteristic != null && type == BluetoothDevice.DEVICE_TYPE_LE) {
-                if (connector != null && sendCallBack != null) {
-                    connector.setSendCallBack(sendCallBack);
-                }
-
 
                 //When the packet length exceeds 20, it needs to be sent by subcontracting
                 if (mBleConfig == null) {
                     mBleConfig = HBluetooth.getInstance().getBleConfig();
                 }
-                boolean splitPacketToSendWhenCmdLenBeyond20 = false;
-                int sendTimeInterval = 0, splitLen = BLE_ONCE_PACK_SIZE_LIMIT;
+                boolean splitPacketToSendWhenCmdLenBeyond = false;
+                int sendTimeInterval = 0, splitLen = 20;
+                String serviceUUID = null, writeUUID = null;
                 if (mBleConfig != null) {
-                    splitPacketToSendWhenCmdLenBeyond20 = mBleConfig.isSplitPacketToSendWhenCmdLenBeyond20();
+                    splitPacketToSendWhenCmdLenBeyond = mBleConfig.isSplitPacketToSendWhenCmdLenBeyond();
                     sendTimeInterval = mBleConfig.getSendTimeInterval();
                     splitLen = mBleConfig.getEachSplitPacketLen();
+                    serviceUUID = mBleConfig.getServiceUUID();
+                    writeUUID = mBleConfig.getWriteCharacteristicUUID();
                 }
 
 
-                if (splitPacketToSendWhenCmdLenBeyond20 && command.length > splitLen) {
+                if (splitPacketToSendWhenCmdLenBeyond && command.length > splitLen) {
                     //Split packet to send
                     Object[] objects = ArrayUtils.splitBytes(command, splitLen);
                     for (Object object : objects) {
                         byte[] onceCmd = (byte[]) object;
-                        gattSendCmdWithCallBack(onceCmd, sendCallBack);
-
+                        bleSendCommand(onceCmd, serviceUUID, writeUUID, sendCallBack);
                         try {
                             Thread.sleep(sendTimeInterval);
                         } catch (InterruptedException e) {
@@ -204,8 +230,8 @@ public class BluetoothSender extends Sender {
                         }
                     }
                 } else {
-                    //If not set splitPacketWhenCmdLenBeyond20=true on BleConfig,you need to set mtu when you want to send commands longer than 20
-                    gattSendCmdWithCallBack(command, sendCallBack);
+                    //If not set splitPacketWhenCmdLenBeyond=true on BleConfig,you need to set mtu when you want to send commands longer than 20
+                    bleSendCommand(command, serviceUUID, writeUUID, sendCallBack);
                 }
                 LockStore.releaseLock(LOCK_NAME);
             } else {
@@ -215,14 +241,42 @@ public class BluetoothSender extends Sender {
 
     }
 
-    private void gattSendCmdWithCallBack(byte[] command, SendCallBack sendCallBack) {
-        characteristic.setValue(command);
-        if (sendCallBack != null) {
-            sendCallBack.onSending(command);
+
+    /**
+     * Ble send command
+     *
+     * @param command
+     * @param serviceUUID
+     * @param writeUUID
+     * @param sendCallBack
+     */
+    private void bleSendCommand(byte[] command, String serviceUUID, String writeUUID, SendCallBack sendCallBack) {
+        //Instead, get the characteristic before sending the command every time
+        BluetoothGattService service = mGatt.getService(UUID.fromString(serviceUUID));
+        if (service != null) {
+            characteristic = service.getCharacteristic(UUID.fromString(writeUUID));
+
+            //Check whether can write
+            if (characteristic == null
+                    || (characteristic.getProperties() & (BluetoothGattCharacteristic.PROPERTY_WRITE | BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE)) == 0) {
+                if (sendCallBack != null)
+                    sendCallBack.onSendFailure(new BluetoothException("This characteristic not support write"));
+                return;
+            }
+
+            characteristic.setValue(command);
+            if (sendCallBack != null) {
+                sendCallBack.onSending(command);
+            }
+            if (!mGatt.writeCharacteristic(characteristic) && sendCallBack != null) {
+              sendCallBack.onSendFailure(new BluetoothException("Gatt writeCharacteristic fail, please check command or change the value of sendTimeInterval if you have set it"));
+            }
+        } else {
+            if (sendCallBack != null) {
+                sendCallBack.onSendFailure(new BluetoothException("Main bluetoothGattService is null,please check the serviceUUID whether right"));
+            }
         }
-        if (!mGatt.writeCharacteristic(characteristic) && sendCallBack != null) {
-            sendCallBack.onSendFailure(new BluetoothException("Gatt writeCharacteristic fail, please check command or change the value of sendTimeInterval if you have set it"));
-        }
+
     }
 
     @Override
@@ -237,6 +291,5 @@ public class BluetoothSender extends Sender {
         }
         return null;
     }
-
 
 }

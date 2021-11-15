@@ -16,6 +16,8 @@ public abstract class Scanner {
 
     public abstract void stopScan();
 
+    public abstract void resetCallBack();
+
     public ScanFilter getFilter() {
         return filter;
     }
@@ -23,4 +25,6 @@ public abstract class Scanner {
     public void setFilter(ScanFilter filter) {
         this.filter = filter;
     }
+
+
 }
