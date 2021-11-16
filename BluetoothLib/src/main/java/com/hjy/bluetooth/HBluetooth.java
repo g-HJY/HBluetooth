@@ -85,7 +85,6 @@ public class HBluetooth {
         scanner = new BluetoothScanner(mContext, mAdapter);
         connector = new BluetoothConnector(mContext, mAdapter);
         sender = new BluetoothSender();
-
         receiver = new BluetoothReceiver();
 
         return this;
@@ -155,11 +154,6 @@ public class HBluetooth {
         if (sender != null) {
             sender.resetCallBack();
         }
-
-        if (receiver != null) {
-            receiver.resetCallBack();
-        }
-
         if (scanner != null) {
             scanner.resetCallBack();
         }
@@ -239,6 +233,7 @@ public class HBluetooth {
         private int                   mtuSize;
         private int                   sendTimeInterval   = 20;
         private int                   eachSplitPacketLen = 20;
+        private int                   notifyDelay        = 200;
         private boolean               splitPacketToSendWhenCmdLenBeyond;
         private BleMtuChangedCallback mBleMtuChangedCallback;
 
@@ -259,6 +254,17 @@ public class HBluetooth {
 
         public BleConfig useCharacteristicDescriptor(boolean useCharacteristicDescriptor) {
             this.useCharacteristicDescriptor = useCharacteristicDescriptor;
+            return this;
+        }
+
+        /**
+         * default value = 200ms
+         *
+         * @param millisecond
+         * @return
+         */
+        public BleConfig notifyDelay(int millisecond) {
+            this.notifyDelay = millisecond;
             return this;
         }
 
@@ -347,6 +353,10 @@ public class HBluetooth {
 
         public int getMtuSize() {
             return mtuSize;
+        }
+
+        public int getNotifyDelay() {
+            return notifyDelay;
         }
 
         public BleMtuChangedCallback getBleMtuChangedCallback() {

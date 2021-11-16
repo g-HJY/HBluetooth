@@ -60,6 +60,8 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
                 //.splitPacketToSendWhenCmdLenBeyond20(false)
                 //useCharacteristicDescriptor 默认false
                 //.useCharacteristicDescriptor(false)
+                //连接后开启通知的延迟时间，单位ms，默认200ms
+                //.notifyDelay(200)
                 .setMtu(200, new BleMtuChangedCallback() {
                     @Override
                     public void onSetMTUFailure(int realMtuSize, BluetoothException bleException) {

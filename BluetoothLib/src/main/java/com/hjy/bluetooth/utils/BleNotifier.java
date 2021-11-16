@@ -34,6 +34,11 @@ public class BleNotifier {
      */
     public static void openNotification(final BluetoothGatt gatt, final BluetoothGattService service, final String notifyUUID,
                                         final BluetoothGattCharacteristic bluetoothGattCharacteristic, final BleNotifyCallBack bleNotifyCallBack) {
+        int notifyDelay = 200;
+        HBluetooth.BleConfig bleConfig = HBluetooth.getInstance().getBleConfig();
+        if(bleConfig != null){
+            notifyDelay = bleConfig.getNotifyDelay();
+        }
         new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -104,7 +109,7 @@ public class BleNotifier {
                 }
 
             }
-        }, 200);
+        }, notifyDelay);
     }
 
 
@@ -117,6 +122,7 @@ public class BleNotifier {
             BluetoothGattDescriptor bluetoothGattDescriptor = receiver.getFinalNotifyDescriptor();
             if (bluetoothGattDescriptor != null) {
                 bluetoothGattDescriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+                receiver.setFinalNotifyDescriptor(null);
             }
         }
 

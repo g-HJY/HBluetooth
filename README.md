@@ -19,7 +19,7 @@ Add it in your root build.gradle at the end of repositories:
  Step 2. Add the dependency
 
 	dependencies {
-	     implementation 'com.github.g-HJY:HBluetooth:V1.2.0'
+	     implementation 'com.github.g-HJY:HBluetooth:V1.3.0'
 	}
 
 
@@ -60,6 +60,8 @@ Add it in your root build.gradle at the end of repositories:
                     //.splitPacketToSendWhenCmdLenBeyond(false)
                     //useCharacteristicDescriptor 默认false
                     //.useCharacteristicDescriptor(false)
+                    //连接后开启通知的延迟时间，单位ms，默认200ms
+                    //.notifyDelay(200)
                     .setMtu(200, new BleMtuChangedCallback() {
                         @Override
                         public void onSetMTUFailure(int realMtuSize, BluetoothException bleException) {

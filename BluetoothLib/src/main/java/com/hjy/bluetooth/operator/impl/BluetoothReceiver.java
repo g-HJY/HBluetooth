@@ -25,11 +25,6 @@ public class BluetoothReceiver extends Receiver {
         return this.receiveCallBack;
     }
 
-    @Override
-    public void resetCallBack() {
-        receiveCallBack = null;
-    }
-
     public void setFinalNotifyDescriptor(BluetoothGattDescriptor finalNotifyDescriptor) {
         this.finalNotifyDescriptor = finalNotifyDescriptor;
     }
