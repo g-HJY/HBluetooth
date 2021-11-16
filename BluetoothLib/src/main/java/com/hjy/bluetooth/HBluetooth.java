@@ -202,7 +202,7 @@ public class HBluetooth {
 
     private void checkIfEnableBluetoothFirst() {
         if (mAdapter == null || !mAdapter.isEnabled()) {
-            throw new RuntimeException("you must call enableBluetooth() first.");
+            throw new RuntimeException("You must call enableBluetooth() first.");
         }
     }
 
@@ -307,15 +307,15 @@ public class HBluetooth {
          */
         public BleConfig setMtu(int mtuSize, BleMtuChangedCallback callback) {
             if (callback == null) {
-                throw new IllegalArgumentException("BleMtuChangedCallback can not be Null!");
+                throw new IllegalArgumentException("BleMtuChangedCallback can not be null !");
             }
 
             if (mtuSize > ValueLimit.DEFAULT_MAX_MTU) {
-                callback.onSetMTUFailure(mtuSize, new BluetoothException("requiredMtu should lower than 512 !"));
+                callback.onSetMTUFailure(mtuSize, new BluetoothException("Required mtuSize should lower than 512 !"));
             }
 
             if (mtuSize < ValueLimit.DEFAULT_MTU) {
-                callback.onSetMTUFailure(mtuSize, new BluetoothException("requiredMtu should higher than 23 !"));
+                callback.onSetMTUFailure(mtuSize, new BluetoothException("Required mtuSize should higher than 23 !"));
             }
 
             this.mtuSize = mtuSize;

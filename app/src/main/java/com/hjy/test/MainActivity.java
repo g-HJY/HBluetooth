@@ -152,6 +152,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
 
                     @Override
                     public void onError(int errorType, String errorMsg) {
+                        Log.e(TAG, "errorType:"+errorType+"  errorMsg:"+errorMsg);
                     }
 
                     @Override
@@ -252,7 +253,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
 
             @Override
             public void onError(int errorType, String errorMsg) {
-
+                Log.e(TAG, "errorType:"+errorType+"  errorMsg:"+errorMsg);
             }
 
             @Override

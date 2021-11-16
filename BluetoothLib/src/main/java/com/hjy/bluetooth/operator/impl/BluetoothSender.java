@@ -10,7 +10,6 @@ import com.hjy.bluetooth.HBluetooth;
 import com.hjy.bluetooth.entity.BluetoothDevice;
 import com.hjy.bluetooth.exception.BluetoothException;
 import com.hjy.bluetooth.inter.ConnectCallBack;
-import com.hjy.bluetooth.inter.ReceiveCallBack;
 import com.hjy.bluetooth.inter.SendCallBack;
 import com.hjy.bluetooth.operator.abstra.Sender;
 import com.hjy.bluetooth.utils.ArrayUtils;
@@ -178,9 +177,9 @@ public class BluetoothSender extends Sender {
                             System.arraycopy(buffer, 0, result, 0, size);
 
 
-                            ReceiveCallBack receiveCallBack = HBluetooth.getInstance().receiver().getReceiveCallBack();
-                            if (receiveCallBack != null) {
-                                receiveCallBack.onReceived(dis, result);
+                            BluetoothReceiver receiver = (BluetoothReceiver) HBluetooth.getInstance().receiver();
+                            if (receiver != null && receiver.getReceiveCallBack() != null) {
+                                receiver.getReceiveCallBack().onReceived(dis, result);
                             }
 
 
@@ -269,12 +268,10 @@ public class BluetoothSender extends Sender {
                 sendCallBack.onSending(command);
             }
             if (!mGatt.writeCharacteristic(characteristic) && sendCallBack != null) {
-              sendCallBack.onSendFailure(new BluetoothException("Gatt writeCharacteristic fail, please check command or change the value of sendTimeInterval if you have set it"));
+                sendCallBack.onSendFailure(new BluetoothException("Gatt writeCharacteristic fail, please check command or change the value of sendTimeInterval if you have set it"));
             }
-        } else {
-            if (sendCallBack != null) {
-                sendCallBack.onSendFailure(new BluetoothException("Main bluetoothGattService is null,please check the serviceUUID whether right"));
-            }
+        } else if (sendCallBack != null) {
+            sendCallBack.onSendFailure(new BluetoothException("Main bluetoothGattService is null,please check the serviceUUID whether right"));
         }
 
     }
