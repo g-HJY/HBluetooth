@@ -12,9 +12,28 @@ import com.hjy.bluetooth.entity.ScanFilter;
 public class ScanFilterUtils {
 
     public static boolean isInFilter(String deviceName, ScanFilter filter) {
+
+        if (filter.getNames() == null) {
+            return true;
+        }
+
+        boolean isAllFilterNameEmpty = true;
+        for (String name : filter.getNames()) {
+            if (!TextUtils.isEmpty(name)) {
+                isAllFilterNameEmpty = false;
+                break;
+            }
+        }
+
+        if (isAllFilterNameEmpty) {
+            return true;
+        }
+
+
         if (TextUtils.isEmpty(deviceName)) {
             return false;
         }
+
 
         String[] names = filter.getNames();
         if (names != null && names.length > 0) {

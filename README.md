@@ -19,7 +19,7 @@ Add it in your root build.gradle at the end of repositories:
  Step 2. Add the dependency
 
 	dependencies {
-	     implementation 'com.github.g-HJY:HBluetooth:V1.3.1'
+	     implementation 'com.github.g-HJY:HBluetooth:V1.3.2'
 	}
 
 
@@ -237,7 +237,7 @@ Add it in your root build.gradle at the end of repositories:
 
 
 
-# 更多方法Api介绍：
+# 更多主要方法Api介绍：
 
 1.带设备名称过滤条件的扫描：
 

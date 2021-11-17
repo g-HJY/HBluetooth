@@ -58,6 +58,10 @@ public class BluetoothScanner extends Scanner {
 
 
     private void startScan(int scanType, int timeUse, ScanCallBack scanCallBack) {
+        //Important, If we're already discovering or scanning, stop it!
+        isScanning = false;
+        stopScan();
+
         this.scanType = scanType;
         this.scanCallBack = scanCallBack;
 
@@ -75,9 +79,6 @@ public class BluetoothScanner extends Scanner {
             return;
         }
 
-        //Important, If we're already discovering or scanning, stop it!
-        isScanning = false;
-        stopScan();
 
         //Clear data before scan
         if (bluetoothDevices == null) {
@@ -154,12 +155,15 @@ public class BluetoothScanner extends Scanner {
                     return;
                 }
 
+                int rssi = intent.getShortExtra(android.bluetooth.BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE);
+
                 // new device found
                 BluetoothDevice bluetoothDevice = new BluetoothDevice();
                 bluetoothDevice.setPaired(device.getBondState() == android.bluetooth.BluetoothDevice.BOND_BONDED);
                 bluetoothDevice.setAddress(device.getAddress());
                 bluetoothDevice.setName(device.getName());
                 bluetoothDevice.setType(device.getType());
+                bluetoothDevice.setRssi(rssi);
 
 
                 if (bluetoothDevices != null && bluetoothDevices.size() > 0) {
@@ -188,38 +192,14 @@ public class BluetoothScanner extends Scanner {
     private BluetoothAdapter.LeScanCallback mLeScanCallBack = new BluetoothAdapter.LeScanCallback() {
 
         @Override
-        public void onLeScan(android.bluetooth.BluetoothDevice bluetoothDevice, int i, byte[] bytes) {
+        public void onLeScan(android.bluetooth.BluetoothDevice bluetoothDevice, int rssi, byte[] bytes) {
 
             //If there is filtering, filter the scanning results
             if (getFilter() != null && !ScanFilterUtils.isInFilter(bluetoothDevice.getName(), getFilter())) {
                 return;
             }
 
-            final BluetoothDevice device = new BluetoothDevice();
-            device.setName(bluetoothDevice.getName());
-            device.setAddress(bluetoothDevice.getAddress());
-            device.setType(BluetoothDevice.DEVICE_TYPE_LE);
-            device.setScanRecord(bytes);
-
-            if (bluetoothDevices.contains(device)) {
-                int index = bluetoothDevices.indexOf(device);
-                bluetoothDevices.set(index, device);
-            } else {
-                bluetoothDevices.add(device);
-            }
-
-
-            if (scanCallBack != null) {
-                if (handler == null) {
-                    handler = new Handler(Looper.getMainLooper());
-                }
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        scanCallBack.onScanning(bluetoothDevices, device);
-                    }
-                });
-            }
+            handleBleScanResult(bluetoothDevice, rssi, bytes);
         }
     };
 
@@ -236,33 +216,8 @@ public class BluetoothScanner extends Scanner {
                 return;
             }
 
-            final BluetoothDevice device = new BluetoothDevice();
-            device.setName(bluetoothDevice.getName());
-            device.setAddress(bluetoothDevice.getAddress());
-            device.setType(BluetoothDevice.DEVICE_TYPE_LE);
-            if (result.getScanRecord() != null) {
-                device.setScanRecord(result.getScanRecord().getBytes());
-            }
-
-            if (bluetoothDevices.contains(device)) {
-                int index = bluetoothDevices.indexOf(device);
-                bluetoothDevices.set(index, device);
-            } else {
-                bluetoothDevices.add(device);
-            }
-
-
-            if (scanCallBack != null) {
-                if (handler == null) {
-                    handler = new Handler(Looper.getMainLooper());
-                }
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        scanCallBack.onScanning(bluetoothDevices, device);
-                    }
-                });
-            }
+            handleBleScanResult(bluetoothDevice, result.getRssi(),
+                    result.getScanRecord() == null ? null : result.getScanRecord().getBytes());
         }
 
         @Override
@@ -278,6 +233,37 @@ public class BluetoothScanner extends Scanner {
             }
         }
     };
+
+
+    private void handleBleScanResult(android.bluetooth.BluetoothDevice bluetoothDevice, int rssi, byte[] scanRecord) {
+        final BluetoothDevice device = new BluetoothDevice();
+        device.setName(bluetoothDevice.getName());
+        device.setAddress(bluetoothDevice.getAddress());
+        device.setType(BluetoothDevice.DEVICE_TYPE_LE);
+        device.setPaired(bluetoothDevice.getBondState() == android.bluetooth.BluetoothDevice.BOND_BONDED);
+        device.setRssi(rssi);
+        device.setScanRecord(scanRecord);
+
+        if (bluetoothDevices.contains(device)) {
+            int index = bluetoothDevices.indexOf(device);
+            bluetoothDevices.set(index, device);
+        } else {
+            bluetoothDevices.add(device);
+        }
+
+
+        if (scanCallBack != null) {
+            if (handler == null) {
+                handler = new Handler(Looper.getMainLooper());
+            }
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    scanCallBack.onScanning(bluetoothDevices, device);
+                }
+            });
+        }
+    }
 
 
     @Override
@@ -315,7 +301,6 @@ public class BluetoothScanner extends Scanner {
     public void resetCallBack() {
         scanCallBack = null;
     }
-
 
     private void unregisterReceiver() {
         try {

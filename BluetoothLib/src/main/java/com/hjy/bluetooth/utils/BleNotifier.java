@@ -11,6 +11,7 @@ import android.text.TextUtils;
 import com.hjy.bluetooth.HBluetooth;
 import com.hjy.bluetooth.exception.BluetoothException;
 import com.hjy.bluetooth.inter.BleNotifyCallBack;
+import com.hjy.bluetooth.operator.abstra.Receiver;
 import com.hjy.bluetooth.operator.impl.BluetoothReceiver;
 
 import java.util.UUID;
@@ -95,9 +96,10 @@ public class BleNotifier {
                 }
 
                 if (notifySuccess) {
-                    BluetoothReceiver receiver = (BluetoothReceiver) HBluetooth.getInstance().receiver();
+                    Receiver receiver = HBluetooth.getInstance().receiver();
                     if (receiver != null) {
-                        receiver.setFinalNotifyDescriptor(descriptor);
+                        BluetoothReceiver bluetoothReceiver = (BluetoothReceiver) receiver;
+                        bluetoothReceiver.setFinalNotifyDescriptor(descriptor);
                     }
                     if (bleNotifyCallBack != null) {
                         bleNotifyCallBack.onNotifySuccess();
@@ -117,12 +119,13 @@ public class BleNotifier {
      * Close the ble notification
      */
     public static void closeNotification() {
-        BluetoothReceiver receiver = (BluetoothReceiver) HBluetooth.getInstance().receiver();
+        Receiver receiver = HBluetooth.getInstance().receiver();
         if (receiver != null) {
-            BluetoothGattDescriptor bluetoothGattDescriptor = receiver.getFinalNotifyDescriptor();
+            BluetoothReceiver bluetoothReceiver = (BluetoothReceiver) receiver;
+            BluetoothGattDescriptor bluetoothGattDescriptor = bluetoothReceiver.getFinalNotifyDescriptor();
             if (bluetoothGattDescriptor != null) {
                 bluetoothGattDescriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
-                receiver.setFinalNotifyDescriptor(null);
+                bluetoothReceiver.setFinalNotifyDescriptor(null);
             }
         }
 

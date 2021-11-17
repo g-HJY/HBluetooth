@@ -1,5 +1,7 @@
 package com.hjy.bluetooth.entity;
 
+import java.util.Arrays;
+
 /**
  * Created by _H_JY on 2018/10/20.
  */
@@ -18,6 +20,8 @@ public class BluetoothDevice {
     private boolean paired;
 
     private byte[] scanRecord;
+
+    private int rssi;
 
 
     public String getName() {
@@ -60,6 +64,14 @@ public class BluetoothDevice {
         this.scanRecord = scanRecord;
     }
 
+    public int getRssi() {
+        return rssi;
+    }
+
+    public void setRssi(int rssi) {
+        this.rssi = rssi;
+    }
+
     public boolean equals(Object obj) {
         if (obj instanceof BluetoothDevice) {
             BluetoothDevice d = (BluetoothDevice) obj;
@@ -75,6 +87,8 @@ public class BluetoothDevice {
                 ", type=" + type +
                 ", address='" + address + '\'' +
                 ", paired=" + paired +
+                ", scanRecord=" + Arrays.toString(scanRecord) +
+                ", rssi=" + rssi +
                 '}';
     }
 }

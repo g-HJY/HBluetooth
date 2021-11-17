@@ -32,4 +32,5 @@ public class BluetoothReceiver extends Receiver {
     public BluetoothGattDescriptor getFinalNotifyDescriptor() {
         return finalNotifyDescriptor;
     }
+
 }

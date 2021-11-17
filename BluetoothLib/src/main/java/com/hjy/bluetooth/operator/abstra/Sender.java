@@ -20,4 +20,14 @@ public abstract class Sender {
 
     public abstract void resetCallBack();
 
+
+    /**
+     * Read characteristic according to the service uuid and characteristic uuid
+     *
+     * @param serviceUUID
+     * @param characteristicUUID
+     * @param sendCallBack
+     */
+    public abstract void readCharacteristic(String serviceUUID, String characteristicUUID, SendCallBack sendCallBack);
+
 }

@@ -183,6 +183,12 @@ public class HBluetooth {
         }
     }
 
+    public void readBleCharacteristic(String serviceUUID, String characteristicUUID, SendCallBack sendCallBack) {
+        if (sender != null) {
+            sender.readCharacteristic(serviceUUID, characteristicUUID, sendCallBack);
+        }
+    }
+
     public Sender sender() {
         checkIfEnableBluetoothFirst();
         return sender;

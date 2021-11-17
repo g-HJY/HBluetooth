@@ -25,6 +25,7 @@ import com.hjy.bluetooth.inter.ConnectCallBack;
 import com.hjy.bluetooth.operator.abstra.Connector;
 import com.hjy.bluetooth.operator.abstra.Sender;
 import com.hjy.bluetooth.utils.BleNotifier;
+import com.hjy.bluetooth.utils.ReceiveHolder;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -42,8 +43,7 @@ public class BluetoothConnector extends Connector {
     private BleNotifyCallBack         bleNotifyCallBack;
 
 
-    private BluetoothConnector() {
-    }
+    private BluetoothConnector() {}
 
     public BluetoothConnector(Context context, BluetoothAdapter bluetoothAdapter) {
         this.mContext = context;
@@ -172,8 +172,8 @@ public class BluetoothConnector extends Connector {
                 //At the software level, MTU setting is supported only when Android API version > = 21 (Android 5.0).
                 //At the hardware level, only modules with Bluetooth 4.2 and above can support the setting of MTU.
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && mtuSize > 23 && mtuSize < 512) {
-                    if(!gatt.requestMtu(mtuSize) && bleConfig.getBleMtuChangedCallback() != null){
-                        bleConfig.getBleMtuChangedCallback().onSetMTUFailure(-1,new BluetoothException("Gatt requestMtu failed"));
+                    if (!gatt.requestMtu(mtuSize) && bleConfig.getBleMtuChangedCallback() != null) {
+                        bleConfig.getBleMtuChangedCallback().onSetMTUFailure(-1, new BluetoothException("Gatt requestMtu failed"));
                     }
                 }
 
@@ -234,23 +234,25 @@ public class BluetoothConnector extends Connector {
                 if (BluetoothGatt.GATT_SUCCESS == status && mtuSize == mtu) {
                     callback.onMtuChanged(mtu);
                 } else {
-                    callback.onSetMTUFailure(mtu, new BluetoothException("MTU change warning! Real size of MTU is "+mtu));
+                    callback.onSetMTUFailure(mtu, new BluetoothException("MTU change warning! Real size of MTU is " + mtu));
                 }
+            }
+        }
+
+
+        @Override
+        public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            super.onCharacteristicRead(gatt, characteristic, status);
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                ReceiveHolder.receiveBleReturnData(characteristic);
             }
         }
 
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicChanged(gatt, characteristic);
-            byte[] result = characteristic.getValue();
-            BluetoothReceiver receiver = (BluetoothReceiver) HBluetooth.getInstance().receiver();
-            if (receiver != null && receiver.getReceiveCallBack() != null) {
-                receiver.getReceiveCallBack().onReceived(null, result);
-            }
-
+            ReceiveHolder.receiveBleReturnData(characteristic);
         }
-
     };
-
 
 }

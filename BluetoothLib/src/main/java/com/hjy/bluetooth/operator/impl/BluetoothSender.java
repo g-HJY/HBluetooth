@@ -5,6 +5,8 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothSocket;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
 
 import com.hjy.bluetooth.HBluetooth;
 import com.hjy.bluetooth.entity.BluetoothDevice;
@@ -15,6 +17,7 @@ import com.hjy.bluetooth.operator.abstra.Sender;
 import com.hjy.bluetooth.utils.ArrayUtils;
 import com.hjy.bluetooth.utils.BleNotifier;
 import com.hjy.bluetooth.utils.LockStore;
+import com.hjy.bluetooth.utils.ReceiveHolder;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -28,6 +31,7 @@ import java.util.UUID;
  */
 public class BluetoothSender extends Sender {
 
+    private              Handler                     handler   = new Handler(Looper.getMainLooper());
     private              BluetoothSocket             mSocket;
     private              BluetoothGatt               mGatt;
     private              BluetoothGattCharacteristic characteristic;
@@ -137,6 +141,38 @@ public class BluetoothSender extends Sender {
         return mGatt;
     }
 
+    private void sendFailCallBack(final String failMsg) {
+        if (sendCallBack != null) {
+            if (Looper.myLooper() == Looper.getMainLooper()) {
+                sendCallBack.onSendFailure(new BluetoothException(failMsg));
+            } else {
+                //Call back on UI thread
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        sendCallBack.onSendFailure(new BluetoothException(failMsg));
+                    }
+                });
+            }
+        }
+    }
+
+    private void sendingCallBack(final byte[] command) {
+        if (sendCallBack != null) {
+            if (Looper.myLooper() == Looper.getMainLooper()) {
+                sendCallBack.onSending(command);
+            } else {
+                //Call back on UI thread
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        sendCallBack.onSending(command);
+                    }
+                });
+            }
+        }
+    }
+
     @Override
     public void send(final byte[] command, final SendCallBack sendCallBack) {
         this.sendCallBack = sendCallBack;
@@ -160,9 +196,7 @@ public class BluetoothSender extends Sender {
 
                             Thread.sleep(50);
 
-                            if (sendCallBack != null) {
-                                sendCallBack.onSending(command);
-                            }
+                            sendingCallBack(command);
 
                             //Send command.
                             OutputStream os = mSocket.getOutputStream();
@@ -176,23 +210,14 @@ public class BluetoothSender extends Sender {
                             byte[] result = new byte[size];
                             System.arraycopy(buffer, 0, result, 0, size);
 
-
-                            BluetoothReceiver receiver = (BluetoothReceiver) HBluetooth.getInstance().receiver();
-                            if (receiver != null && receiver.getReceiveCallBack() != null) {
-                                receiver.getReceiveCallBack().onReceived(dis, result);
-                            }
-
+                            ReceiveHolder.receiveClassicBluetoothReturnData(dis, result);
 
                         } catch (IOException e) {
                             e.printStackTrace();
-                            if (sendCallBack != null) {
-                                sendCallBack.onSendFailure(new BluetoothException("Bluetooth socket write IOException"));
-                            }
+                            sendFailCallBack("Bluetooth socket write IOException");
                         } catch (InterruptedException e) {
                             e.printStackTrace();
-                            if (sendCallBack != null) {
-                                sendCallBack.onSendFailure(new BluetoothException("Bluetooth socket write InterruptedException"));
-                            }
+                            sendFailCallBack("Bluetooth socket write InterruptedException");
                         } finally {
                             LockStore.releaseLock(LOCK_NAME);
                         }
@@ -221,7 +246,7 @@ public class BluetoothSender extends Sender {
                     Object[] objects = ArrayUtils.splitBytes(command, splitLen);
                     for (Object object : objects) {
                         byte[] onceCmd = (byte[]) object;
-                        bleSendCommand(onceCmd, serviceUUID, writeUUID, sendCallBack);
+                        bleSendCommand(onceCmd, serviceUUID, writeUUID);
                         try {
                             Thread.sleep(sendTimeInterval);
                         } catch (InterruptedException e) {
@@ -230,7 +255,7 @@ public class BluetoothSender extends Sender {
                     }
                 } else {
                     //If not set splitPacketWhenCmdLenBeyond=true on BleConfig,you need to set mtu when you want to send commands longer than 20
-                    bleSendCommand(command, serviceUUID, writeUUID, sendCallBack);
+                    bleSendCommand(command, serviceUUID, writeUUID);
                 }
                 LockStore.releaseLock(LOCK_NAME);
             } else {
@@ -247,31 +272,31 @@ public class BluetoothSender extends Sender {
      * @param command
      * @param serviceUUID
      * @param writeUUID
-     * @param sendCallBack
      */
-    private void bleSendCommand(byte[] command, String serviceUUID, String writeUUID, SendCallBack sendCallBack) {
+    private void bleSendCommand(byte[] command, String serviceUUID, String writeUUID) {
         //Instead, get the characteristic before sending the command every time
         BluetoothGattService service = mGatt.getService(UUID.fromString(serviceUUID));
         if (service != null) {
             characteristic = service.getCharacteristic(UUID.fromString(writeUUID));
 
+            if (characteristic == null) {
+                sendFailCallBack("The WriteCharacteristic is null, please check your writeUUID whether right");
+                return;
+            }
+
             //Check whether can write
-            if (characteristic == null
-                    || (characteristic.getProperties() & (BluetoothGattCharacteristic.PROPERTY_WRITE | BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE)) == 0) {
-                if (sendCallBack != null)
-                    sendCallBack.onSendFailure(new BluetoothException("This characteristic not support write"));
+            if ((characteristic.getProperties() & (BluetoothGattCharacteristic.PROPERTY_WRITE | BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE)) == 0) {
+                sendFailCallBack("This characteristic not support write");
                 return;
             }
 
             characteristic.setValue(command);
-            if (sendCallBack != null) {
-                sendCallBack.onSending(command);
+            sendingCallBack(command);
+            if (!mGatt.writeCharacteristic(characteristic)) {
+                sendFailCallBack("Gatt writeCharacteristic fail, please check command or change the value of sendTimeInterval if you have set it");
             }
-            if (!mGatt.writeCharacteristic(characteristic) && sendCallBack != null) {
-                sendCallBack.onSendFailure(new BluetoothException("Gatt writeCharacteristic fail, please check command or change the value of sendTimeInterval if you have set it"));
-            }
-        } else if (sendCallBack != null) {
-            sendCallBack.onSendFailure(new BluetoothException("Main bluetoothGattService is null,please check the serviceUUID whether right"));
+        } else {
+            sendFailCallBack("Main bluetoothGattService is null,please check the serviceUUID whether right");
         }
 
     }
@@ -287,6 +312,38 @@ public class BluetoothSender extends Sender {
             return (T) (mGatt = (BluetoothGatt) o);
         }
         return null;
+    }
+
+
+    @Override
+    public void readCharacteristic(String serviceUUID, String characteristicUUID, SendCallBack sendCallBack) {
+        this.sendCallBack = sendCallBack;
+        if (mGatt != null) {
+            BluetoothGattService service = mGatt.getService(UUID.fromString(serviceUUID));
+            if (service != null) {
+                BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID));
+
+                if (characteristic == null) {
+                    sendFailCallBack("This Characteristic is null, please check the characteristicUUID whether right");
+                    return;
+                }
+
+                //Check whether can read
+                if ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) == 0) {
+                    sendFailCallBack("This characteristic not support read");
+                    return;
+                }
+
+                if (!mGatt.readCharacteristic(characteristic)) {
+                    sendFailCallBack("Gatt readCharacteristic fail");
+                }
+
+            } else {
+                sendFailCallBack("BluetoothGattService is null,please check the serviceUUID whether right");
+            }
+        } else {
+            sendFailCallBack("BluetoothGatt is null");
+        }
     }
 
 }
