@@ -14,6 +14,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.RequiresApi;
 
+import com.hjy.bluetooth.HBluetooth;
 import com.hjy.bluetooth.entity.BluetoothDevice;
 import com.hjy.bluetooth.inter.ScanCallBack;
 import com.hjy.bluetooth.operator.abstra.Scanner;
@@ -35,10 +36,10 @@ public class BluetoothScanner extends Scanner {
     private List<BluetoothDevice> bluetoothDevices;
     private BluetoothAdapter      bluetoothAdapter;
     private Handler               handler;
+    private boolean               liveUpdateScannedDeviceName;
 
     private BluetoothScanner() {
     }
-
 
     public BluetoothScanner(Context context, BluetoothAdapter bluetoothAdapter) {
         this.mContext = context;
@@ -58,9 +59,14 @@ public class BluetoothScanner extends Scanner {
 
 
     private void startScan(int scanType, int timeUse, ScanCallBack scanCallBack) {
-        //Important, If we're already discovering or scanning, stop it!
+        //Important, If we're already discovering or scanning, stop it first!
         isScanning = false;
         stopScan();
+
+        HBluetooth.BleConfig bleConfig = HBluetooth.getInstance().getBleConfig();
+        if (bleConfig != null) {
+            this.liveUpdateScannedDeviceName = bleConfig.isLiveUpdateScannedDeviceName();
+        }
 
         this.scanType = scanType;
         this.scanCallBack = scanCallBack;
@@ -79,14 +85,12 @@ public class BluetoothScanner extends Scanner {
             return;
         }
 
-
         //Clear data before scan
         if (bluetoothDevices == null) {
             bluetoothDevices = new ArrayList<>();
         } else if (bluetoothDevices.size() > 0) {
             bluetoothDevices.clear();
         }
-
 
         if (this.scanCallBack != null) {
             this.scanCallBack.onScanStart();
@@ -136,8 +140,7 @@ public class BluetoothScanner extends Scanner {
     }
 
     //CLASSIC BLUETOOTH
-    // The BroadcastReceiver that listens for discovered devices and
-    // changes the title when discovery is finished
+    // The BroadcastReceiver that listens for discovered devices
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -177,7 +180,7 @@ public class BluetoothScanner extends Scanner {
                     scanCallBack.onScanning(bluetoothDevices, bluetoothDevice);
                 }
 
-                // When discovery is finished, change the Activity title
+                // When discovery is finished, complete scan and call back
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 if (scanCallBack != null) {
                     scanCallBack.onScanFinished(bluetoothDevices);
@@ -193,12 +196,6 @@ public class BluetoothScanner extends Scanner {
 
         @Override
         public void onLeScan(android.bluetooth.BluetoothDevice bluetoothDevice, int rssi, byte[] bytes) {
-
-            //If there is filtering, filter the scanning results
-            if (getFilter() != null && !ScanFilterUtils.isInFilter(bluetoothDevice.getName(), getFilter())) {
-                return;
-            }
-
             handleBleScanResult(bluetoothDevice, rssi, bytes);
         }
     };
@@ -211,10 +208,6 @@ public class BluetoothScanner extends Scanner {
         public void onScanResult(int callbackType, ScanResult result) {
             super.onScanResult(callbackType, result);
             android.bluetooth.BluetoothDevice bluetoothDevice = result.getDevice();
-            //If there is filtering, filter the scanning results
-            if (getFilter() != null && !ScanFilterUtils.isInFilter(bluetoothDevice.getName(), getFilter())) {
-                return;
-            }
 
             handleBleScanResult(bluetoothDevice, result.getRssi(),
                     result.getScanRecord() == null ? null : result.getScanRecord().getBytes());
@@ -236,8 +229,22 @@ public class BluetoothScanner extends Scanner {
 
 
     private void handleBleScanResult(android.bluetooth.BluetoothDevice bluetoothDevice, int rssi, byte[] scanRecord) {
+        //If you need to get real-time device name,we can parse it from scanRecord.
+        //Otherwise, you will get cached data, not real-time data
+        String deviceName;
+        if (liveUpdateScannedDeviceName) {
+            deviceName = ScanFilterUtils.parseDeviceName(scanRecord);
+        } else {
+            deviceName = bluetoothDevice.getName();
+        }
+
+        //If there is filtering, filter the scanning results
+        if (getFilter() != null && !ScanFilterUtils.isInFilter(deviceName, getFilter())) {
+            return;
+        }
+
         final BluetoothDevice device = new BluetoothDevice();
-        device.setName(bluetoothDevice.getName());
+        device.setName(deviceName);
         device.setAddress(bluetoothDevice.getAddress());
         device.setType(BluetoothDevice.DEVICE_TYPE_LE);
         device.setPaired(bluetoothDevice.getBondState() == android.bluetooth.BluetoothDevice.BOND_BONDED);
@@ -265,7 +272,6 @@ public class BluetoothScanner extends Scanner {
         }
     }
 
-
     @Override
     public synchronized void stopScan() {
         if (scanType == BluetoothDevice.DEVICE_TYPE_CLASSIC) {
@@ -282,17 +288,17 @@ public class BluetoothScanner extends Scanner {
         }
 
         if (isScanning) {
-            if (scanCallBack != null) {
-                if (handler == null) {
-                    handler = new Handler(Looper.getMainLooper());
-                }
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
+            if (handler == null) {
+                handler = new Handler(Looper.getMainLooper());
+            }
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (scanCallBack != null) {
                         scanCallBack.onScanFinished(bluetoothDevices);
                     }
-                });
-            }
+                }
+            });
             isScanning = false;
         }
     }
@@ -309,5 +315,4 @@ public class BluetoothScanner extends Scanner {
             e.printStackTrace();
         }
     }
-
 }

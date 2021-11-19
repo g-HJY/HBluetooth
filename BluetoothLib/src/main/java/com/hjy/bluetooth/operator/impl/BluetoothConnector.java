@@ -13,6 +13,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 
 import com.hjy.bluetooth.HBluetooth;
@@ -28,22 +30,33 @@ import com.hjy.bluetooth.utils.BleNotifier;
 import com.hjy.bluetooth.utils.ReceiveHolder;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+
+import static android.bluetooth.BluetoothDevice.TRANSPORT_LE;
 
 /**
  * Created by _H_JY on 2018/10/20.
  */
+
 public class BluetoothConnector extends Connector {
 
-    private Context                   mContext;
-    private BluetoothAdapter          bluetoothAdapter;
-    private BluetoothConnectAsyncTask connectAsyncTask;
-    private ConnectCallBack           connectCallBack;
-    private BleNotifyCallBack         bleNotifyCallBack;
+    private              Context                                  mContext;
+    private              BluetoothAdapter                         bluetoothAdapter;
+    private              BluetoothConnectAsyncTask                connectAsyncTask;
+    private              ConnectCallBack                          connectCallBack;
+    private              BleNotifyCallBack                        bleNotifyCallBack;
+    private              Handler                                  handler;
+    private              Map<String, Boolean>                     timeOutDeviceMap;
+    private              com.hjy.bluetooth.entity.BluetoothDevice device;
+    private              long                                     lastCheckReconnectTime    = 0L;
+    //The interval between two reconnection detection shall not be less than 2000ms
+    private static final int                                      FAST_RECONNECT_DELAY_TIME = 2000;
 
-
-    private BluetoothConnector() {}
+    private BluetoothConnector() {
+    }
 
     public BluetoothConnector(Context context, BluetoothAdapter bluetoothAdapter) {
         this.mContext = context;
@@ -54,8 +67,9 @@ public class BluetoothConnector extends Connector {
     @Override
     public synchronized void connect(com.hjy.bluetooth.entity.BluetoothDevice device, final ConnectCallBack connectCallBack) {
         this.connectCallBack = connectCallBack;
+        this.device = device;
         cancelConnectAsyncTask();
-        HBluetooth hBluetooth = HBluetooth.getInstance();
+        final HBluetooth hBluetooth = HBluetooth.getInstance();
         hBluetooth.destroyChannel();
         hBluetooth.cancelScan();
 
@@ -90,12 +104,55 @@ public class BluetoothConnector extends Connector {
                 }, filter);
             }
 
-            connectAsyncTask = new BluetoothConnectAsyncTask(mContext, remoteDevice, this.connectCallBack);
+            //Classic Bluetooth connection thread
+            initializeRelatedNullVariable();
+            connectAsyncTask = new BluetoothConnectAsyncTask(mContext, handler,
+                    timeOutDeviceMap, remoteDevice, this.connectCallBack);
             connectAsyncTask.execute();
 
         } else if (device.getType() == BluetoothDevice.DEVICE_TYPE_LE) { //BLE Type.
+            //Get related config of connection
+            HBluetooth.BleConfig bleConfig = hBluetooth.getBleConfig();
+            boolean autoConnect = false;
+            if (bleConfig != null) {
+                autoConnect = bleConfig.isAutoConnect();
+            }
 
-            remoteDevice.connectGatt(mContext, false, bluetoothGattCallback);
+            //If the connection timeout is set, enable timeout detection
+            int connectTimeOut = hBluetooth.getConnectTimeOut();
+            if (connectTimeOut > 0) {
+                //You have set connectTimeOut and value is right
+                initializeRelatedNullVariable();
+                timeOutDeviceMap.put(remoteDevice.getAddress(), false);
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (!hBluetooth.isConnected()) {
+                            timeOutDeviceMap.put(remoteDevice.getAddress(), true);
+                            hBluetooth.releaseIgnoreActiveDisconnect();
+                            if (connectCallBack != null) {
+                                connectCallBack.onError(BluetoothState.CONNECT_TIMEOUT, "Connect time out");
+                            }
+                        }
+                    }
+                }, connectTimeOut);
+            }
+
+            //Ble connection,for systems above 6.0, the transmission mode adopts transport_ LE
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                remoteDevice.connectGatt(mContext, autoConnect, bluetoothGattCallback, TRANSPORT_LE);
+            } else {
+                remoteDevice.connectGatt(mContext, autoConnect, bluetoothGattCallback);
+            }
+        }
+    }
+
+    private void initializeRelatedNullVariable() {
+        if (timeOutDeviceMap == null) {
+            timeOutDeviceMap = new HashMap<>();
+        }
+        if (handler == null) {
+            handler = new Handler(Looper.getMainLooper());
         }
     }
 
@@ -113,43 +170,83 @@ public class BluetoothConnector extends Connector {
         }
     }
 
+
+    /**
+     * Reconnect if the reconnection is supported
+     *
+     * @param gatt
+     */
+    private void checkBleReconnect(BluetoothGatt gatt) {
+        if (System.currentTimeMillis() - lastCheckReconnectTime >= FAST_RECONNECT_DELAY_TIME) {
+            lastCheckReconnectTime = System.currentTimeMillis();
+            HBluetooth hBluetooth = HBluetooth.getInstance();
+            int reconnectTimes = hBluetooth.getReconnectTryTimes();
+            int retryTimes = getRetryTimes();
+            if (reconnectTimes > 0 && !hBluetooth.isUserActiveDisconnect() && retryTimes < reconnectTimes) {
+                setRetryTimes(++retryTimes);
+                //Log.e("mylog", "Try reconnecting->" + retryTimes);
+                initializeRelatedNullVariable();
+                if (timeOutDeviceMap.containsKey(gatt.getDevice().getAddress())) {
+                    timeOutDeviceMap.remove(gatt.getDevice().getAddress());
+                }
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (device != null) {
+                            connect(device, connectCallBack, bleNotifyCallBack);
+                        }
+                    }
+                }, hBluetooth.getReconnectInterval());
+            } else {
+                //Clear listener
+                connectCallBack = null;
+                bleNotifyCallBack = null;
+            }
+        }
+    }
+
     private BluetoothGattCallback bluetoothGattCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             super.onConnectionStateChange(gatt, status, newState);
-            if (newState == BluetoothProfile.STATE_CONNECTED) {
-                HBluetooth hBluetooth = HBluetooth.getInstance();
-                hBluetooth.setConnected(true);
-                Sender sender = hBluetooth.sender();
-                if (sender != null) {
-                    BluetoothSender bluetoothSender = (BluetoothSender) sender;
-                    bluetoothSender.setConnector(BluetoothConnector.this).initChannel(gatt, BluetoothDevice.DEVICE_TYPE_LE, connectCallBack);
-                    bluetoothSender.discoverServices();
-                }
+            //Only devices connected without timeout need callback processing, because the timeout has been handled separately
+            if (timeOutDeviceMap == null || !timeOutDeviceMap.get(gatt.getDevice().getAddress())) {
+                if (newState == BluetoothProfile.STATE_CONNECTED) {
+                    HBluetooth hBluetooth = HBluetooth.getInstance();
+                    hBluetooth.setConnected(true);
+                    hBluetooth.setUserActiveDisconnect(false);
+                    setRetryTimes(0);
+                    Sender sender = hBluetooth.sender();
+                    if (sender != null) {
+                        BluetoothSender bluetoothSender = (BluetoothSender) sender;
+                        bluetoothSender.setConnector(BluetoothConnector.this).initChannel(gatt, BluetoothDevice.DEVICE_TYPE_LE, connectCallBack);
+                        bluetoothSender.discoverServices();
+                    }
 
-                if (connectCallBack != null) {
-                    connectCallBack.onConnected(sender);
-                }
+                    if (connectCallBack != null) {
+                        connectCallBack.onConnected(sender);
+                    }
 
-            } else if (newState == BluetoothProfile.STATE_CONNECTING) {
-                if (connectCallBack != null) {
+                } else if (newState == BluetoothProfile.STATE_CONNECTING && connectCallBack != null) {
                     connectCallBack.onConnecting();
-                }
+                } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                    HBluetooth.getInstance().setConnected(false);
+                    if (gatt != null) {
+                        gatt.close();
+                    }
+                    if (connectCallBack != null) {
+                        connectCallBack.onDisConnected();
+                    }
 
-            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                HBluetooth.getInstance().setConnected(false);
-                if (gatt != null) {
-                    gatt.close();
-                }
-                if (connectCallBack != null) {
-                    connectCallBack.onDisConnected();
-                    connectCallBack = null;
-                }
-            } else if (newState == BluetoothProfile.STATE_DISCONNECTING) {
-                if (connectCallBack != null) {
+                    //If it is a passive disconnection and the reconnection mechanism is enabled, reconnect when disconnected
+                    checkBleReconnect(gatt);
+                } else if (newState == BluetoothProfile.STATE_DISCONNECTING && connectCallBack != null) {
                     connectCallBack.onDisConnecting();
                 }
-
+            } else {
+                //Remove the time out record of this device
+                timeOutDeviceMap.remove(gatt.getDevice().getAddress());
+                checkBleReconnect(gatt);
             }
         }
 

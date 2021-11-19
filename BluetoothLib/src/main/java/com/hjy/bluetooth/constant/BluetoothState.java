@@ -11,4 +11,7 @@ public final class BluetoothState {
     public final static int CONNECT_SUCCESS = 1;
 
     public final static int CONNECT_FAIL = 2;
+
+    public final static int CONNECT_TIMEOUT = 3;
+
 }

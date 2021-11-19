@@ -57,8 +57,8 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
                 .withWriteCharacteristicUUID("0000fe61-0000-1000-8000-00805f9b34fb")
                 .withNotifyCharacteristicUUID("0000fe61-0000-1000-8000-00805f9b34fb")
                 //命令长度大于20个字节时是否分包发送，默认false,分包时可以调两参方法设置包之间发送间隔
-                //.splitPacketToSendWhenCmdLenBeyond20(false)
-                //useCharacteristicDescriptor 默认false
+                //默认false,注释部分为默认值
+                //.splitPacketToSendWhenCmdLenBeyond(false)
                 //.useCharacteristicDescriptor(false)
                 //连接后开启通知的延迟时间，单位ms，默认200ms
                 //.notifyDelay(200)

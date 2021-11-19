@@ -1,5 +1,21 @@
 # HBluetooth
-封装了支持经典蓝牙或低功耗蓝牙扫描，连接，以及通信的库。附带使用例子。该库后续会持续升级维护，敬请关注...
+封装了支持经典蓝牙或低功耗蓝牙扫描，连接，以及通信的库。附带使用例子。
+
+该库后续会持续升级维护，敬请关注...
+
+![未标题-1](https://user-images.githubusercontent.com/15326847/142364112-dc66af7a-440f-4c11-97d5-f3619b892e75.png)
+
+该项目拥有如下优点：
+
+1.轻量级，无过度封装，简单易懂
+
+2.源码关键节点均有注释，学习理解无障碍
+
+3.源码结构按流程分工明确，便于扩展
+
+4.同时兼容经典蓝牙和低功耗蓝牙
+
+5....
 
 一.集成方式
 
@@ -19,7 +35,7 @@ Add it in your root build.gradle at the end of repositories:
  Step 2. Add the dependency
 
 	dependencies {
-	     implementation 'com.github.g-HJY:HBluetooth:V1.3.2'
+	     implementation 'com.github.g-HJY:HBluetooth:V1.3.3'
 	}
 
 
@@ -246,8 +262,18 @@ Add it in your root build.gradle at the end of repositories:
  public void scan(@BluetoothType int scanType, ScanFilter filter, ScanCallBack scanCallBack);
 
 
-2.BleConfig(BLE)设置分包发送时间间隔(默认20ms)及包长度(默认20个字节)：
+2.设置连接超时:
+
+HBluetooth.getInstance().setConnectTimeOut(5000);
+
+
+3.BleConfig(BLE)设置分包发送时间间隔(默认20ms)及包长度(默认20个字节)：
 
  public BleConfig splitPacketToSendWhenCmdLenBeyond(boolean splitPacketToSendWhenCmdLenBeyond, int sendTimeInterval);
 
  public BleConfig splitPacketToSendWhenCmdLenBeyond(boolean splitPacketToSendWhenCmdLenBeyond, int sendTimeInterval, int eachSplitPacketLen);
+
+
+4.开启断开后自动重连机制，默认关闭重连：
+
+HBluetooth.getInstance().openReconnect(3, 4000);

@@ -42,8 +42,12 @@ public class HBluetooth {
     private Connector        connector;
     private Sender           sender;
     private Receiver         receiver;
-    private boolean          isConnected;
-    private BleConfig        mBleConfig;
+    private boolean isConnected;
+    //Mark the user actively clicks the button to disconnect
+    private boolean isUserActiveDisconnect;
+    private int     connectTimeOut;
+    private int              reconnectTryTimes, reconnectInterval;
+    private BleConfig mBleConfig;
 
     private HBluetooth(Context context) {
         this.mContext = context;
@@ -220,6 +224,42 @@ public class HBluetooth {
         isConnected = connected;
     }
 
+    public int getConnectTimeOut() {
+        return connectTimeOut;
+    }
+
+    public HBluetooth setConnectTimeOut(int connectTimeOut) {
+        this.connectTimeOut = connectTimeOut;
+        return this;
+    }
+
+    public HBluetooth openReconnect(int reconnectTryTimes, int reconnectInterval) {
+        this.reconnectTryTimes = reconnectTryTimes > 6 ? 6 : reconnectTryTimes;
+        this.reconnectInterval = reconnectInterval < 0 ? 0 : reconnectInterval;
+        return this;
+    }
+
+    public int getReconnectTryTimes() {
+        return reconnectTryTimes;
+    }
+
+    public int getReconnectInterval() {
+        return reconnectInterval;
+    }
+
+    public void setUserActiveDisconnect(boolean userActiveDisconnect) {
+        isUserActiveDisconnect = userActiveDisconnect;
+    }
+
+    public synchronized void releaseIgnoreActiveDisconnect(){
+        cancelScan();
+        destroyChannel();
+        resetCallBack();
+    }
+
+    public boolean isUserActiveDisconnect() {
+        return isUserActiveDisconnect;
+    }
 
     public BleConfig getBleConfig() {
         return mBleConfig;
@@ -235,12 +275,13 @@ public class HBluetooth {
      */
     public static class BleConfig {
         private String serviceUUID, writeCharacteristicUUID, notifyCharacteristicUUID;
-        private boolean               useCharacteristicDescriptor;
-        private int                   mtuSize;
-        private int                   sendTimeInterval   = 20;
-        private int                   eachSplitPacketLen = 20;
-        private int                   notifyDelay        = 200;
-        private boolean               splitPacketToSendWhenCmdLenBeyond;
+        private boolean useCharacteristicDescriptor;
+        private int     mtuSize;
+        private int     sendTimeInterval   = 20;
+        private int     eachSplitPacketLen = 20;
+        private int     notifyDelay        = 200;
+        private boolean splitPacketToSendWhenCmdLenBeyond, autoConnect;
+        private boolean               liveUpdateScannedDeviceName;
         private BleMtuChangedCallback mBleMtuChangedCallback;
 
         public BleConfig withServiceUUID(String serviceUUID) {
@@ -260,6 +301,30 @@ public class HBluetooth {
 
         public BleConfig useCharacteristicDescriptor(boolean useCharacteristicDescriptor) {
             this.useCharacteristicDescriptor = useCharacteristicDescriptor;
+            return this;
+        }
+
+        /**
+         * Default value is false
+         * Whether to directly connect to the remote device (false) or to automatically connect as soon as the remote device becomes available (true).
+         *
+         * @param autoConnect
+         * @return
+         */
+        public BleConfig autoConnect(boolean autoConnect) {
+            this.autoConnect = autoConnect;
+            return this;
+        }
+
+        /**
+         * If set liveUpdateScannedDeviceName = true,Will get real-time Bluetooth device name
+         * If you do not need real-time updates, please do not set
+         *
+         * @param liveUpdateScannedDeviceName
+         * @return
+         */
+        public BleConfig liveUpdateScannedDeviceName(boolean liveUpdateScannedDeviceName) {
+            this.liveUpdateScannedDeviceName = liveUpdateScannedDeviceName;
             return this;
         }
 
@@ -357,6 +422,14 @@ public class HBluetooth {
             return useCharacteristicDescriptor;
         }
 
+        public boolean isLiveUpdateScannedDeviceName() {
+            return liveUpdateScannedDeviceName;
+        }
+
+        public boolean isAutoConnect() {
+            return autoConnect;
+        }
+
         public int getMtuSize() {
             return mtuSize;
         }
@@ -371,11 +444,16 @@ public class HBluetooth {
     }
 
 
+    /**
+     * Call this method when you need to disconnect
+     */
     public synchronized void release() {
+        isUserActiveDisconnect = true;
         cancelScan();
         destroyChannel();
         resetCallBack();
     }
+
 
 
     private static Context APPLICATION_CONTEXT;
