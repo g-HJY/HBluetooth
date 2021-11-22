@@ -83,7 +83,6 @@ public class BluetoothConnector extends Connector {
                     @Override
                     public void onReceive(Context context, Intent intent) {
                         if (BluetoothDevice.ACTION_PAIRING_REQUEST.equals(intent.getAction())) {
-
                             try {
                                 byte[] pin = (byte[]) BluetoothDevice.class.getMethod("convertPinToBytes", String.class).invoke(BluetoothDevice.class, "1234");
                                 Method m = remoteDevice.getClass().getMethod("setPin", byte[].class);
@@ -93,6 +92,11 @@ public class BluetoothConnector extends Connector {
                                 //context.unregisterReceiver(this);
                                 /*Paired successfully，interrupt broadcast*/
                                 abortBroadcast();
+                                //Already bound,start connection thread
+                                initializeRelatedNullVariable();
+                                connectAsyncTask = new BluetoothConnectAsyncTask(mContext, handler,
+                                        timeOutDeviceMap, remoteDevice, connectCallBack);
+                                connectAsyncTask.execute();
                             } catch (Exception e) {
                                 e.printStackTrace();
                                 if (connectCallBack != null) {
@@ -102,13 +106,21 @@ public class BluetoothConnector extends Connector {
                         }
                     }
                 }, filter);
-            }
 
-            //Classic Bluetooth connection thread
-            initializeRelatedNullVariable();
-            connectAsyncTask = new BluetoothConnectAsyncTask(mContext, handler,
-                    timeOutDeviceMap, remoteDevice, this.connectCallBack);
-            connectAsyncTask.execute();
+                //Have not bond,create bond
+                try {
+                    Method creMethod = BluetoothDevice.class.getMethod("createBond");
+                    creMethod.invoke(remoteDevice);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else {
+                //Already bound,start connection thread
+                initializeRelatedNullVariable();
+                connectAsyncTask = new BluetoothConnectAsyncTask(mContext, handler,
+                        timeOutDeviceMap, remoteDevice, this.connectCallBack);
+                connectAsyncTask.execute();
+            }
 
         } else if (device.getType() == BluetoothDevice.DEVICE_TYPE_LE) { //BLE Type.
             //Get related config of connection

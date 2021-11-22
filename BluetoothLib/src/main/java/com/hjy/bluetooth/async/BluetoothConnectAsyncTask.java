@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Created by _H_JY on 2018/10/22.
@@ -58,6 +59,14 @@ public class BluetoothConnectAsyncTask extends WeakAsyncTask<Void, Void, Integer
             e.printStackTrace();
         } catch (InvocationTargetException e) {
             e.printStackTrace();
+        }
+
+        if(this.bluetoothSocket == null){
+            try {
+                this.bluetoothSocket = this.bluetoothDevice.createInsecureRfcommSocketToServiceRecord(UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
+            } catch (IOException ex) {
+                System.out.println("Failed to create RfComm socket: " + ex.toString());
+            }
         }
     }
 
