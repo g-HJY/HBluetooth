@@ -6,11 +6,13 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.support.annotation.IntDef;
 
+import com.hjy.bluetooth.constant.ClassicBluetoothPairMode;
 import com.hjy.bluetooth.constant.ValueLimit;
 import com.hjy.bluetooth.entity.ScanFilter;
 import com.hjy.bluetooth.exception.BluetoothException;
 import com.hjy.bluetooth.inter.BleMtuChangedCallback;
 import com.hjy.bluetooth.inter.BleNotifyCallBack;
+import com.hjy.bluetooth.inter.ClassicBluetoothPairCallBack;
 import com.hjy.bluetooth.inter.ConnectCallBack;
 import com.hjy.bluetooth.inter.ReceiveCallBack;
 import com.hjy.bluetooth.inter.ScanCallBack;
@@ -26,6 +28,8 @@ import com.hjy.bluetooth.operator.impl.BluetoothSender;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Set;
 
 /**
@@ -42,12 +46,13 @@ public class HBluetooth {
     private Connector        connector;
     private Sender           sender;
     private Receiver         receiver;
-    private boolean isConnected;
+    private boolean          isConnected;
     //Mark the user actively clicks the button to disconnect
-    private boolean isUserActiveDisconnect;
-    private int     connectTimeOut;
+    private boolean          isUserActiveDisconnect;
+    private int              connectTimeOut;
     private int              reconnectTryTimes, reconnectInterval;
-    private BleConfig mBleConfig;
+    private BleConfig              mBleConfig;
+    private ClassicBluetoothConfig mClassicBluetoothConfig;
 
     private HBluetooth(Context context) {
         this.mContext = context;
@@ -68,6 +73,11 @@ public class HBluetooth {
     @IntDef({BluetoothDevice.DEVICE_TYPE_CLASSIC, BluetoothDevice.DEVICE_TYPE_LE})
     @Retention(RetentionPolicy.SOURCE)
     public @interface BluetoothType {
+    }
+
+    @IntDef({ClassicBluetoothPairMode.JUST_WORK, ClassicBluetoothPairMode.PIN_CODE})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface PairMode {
     }
 
     /**
@@ -104,6 +114,34 @@ public class HBluetooth {
             scanner.scan(scanType, scanCallBack);
         }
     }
+
+
+    /**
+     * Only for classic bluetooth.
+     * <p>
+     * Perform unpaired through reflection
+     *
+     * @param bluetoothDevice
+     * @return true or false
+     */
+    public boolean disBoundDevice(BluetoothDevice bluetoothDevice) {
+        if (bluetoothDevice == null) {
+            return false;
+        }
+        try {
+            Method removeBondMethod = BluetoothDevice.class.getMethod("removeBond");
+            Boolean returnValue = (Boolean) removeBondMethod.invoke(bluetoothDevice);
+            return returnValue.booleanValue();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
 
     public void scan(@BluetoothType int scanType, int timeUse, ScanCallBack scanCallBack) {
         if (scanner != null) {
@@ -173,6 +211,12 @@ public class HBluetooth {
     public void connect(com.hjy.bluetooth.entity.BluetoothDevice bluetoothDevice, ConnectCallBack connectCallBack, BleNotifyCallBack bleNotifyCallBack) {
         if (connector != null) {
             connector.connect(bluetoothDevice, connectCallBack, bleNotifyCallBack);
+        }
+    }
+
+    public void connect(com.hjy.bluetooth.entity.BluetoothDevice bluetoothDevice, ClassicBluetoothPairCallBack classicBluetoothPairCallBack, ConnectCallBack connectCallBack) {
+        if (connector != null) {
+            connector.connect(bluetoothDevice, classicBluetoothPairCallBack, connectCallBack);
         }
     }
 
@@ -251,7 +295,7 @@ public class HBluetooth {
         isUserActiveDisconnect = userActiveDisconnect;
     }
 
-    public synchronized void releaseIgnoreActiveDisconnect(){
+    public synchronized void releaseIgnoreActiveDisconnect() {
         cancelScan();
         destroyChannel();
         resetCallBack();
@@ -267,6 +311,54 @@ public class HBluetooth {
 
     public void setBleConfig(BleConfig bleConfig) {
         mBleConfig = bleConfig;
+    }
+
+    public ClassicBluetoothConfig getClassicBluetoothConfig() {
+        return mClassicBluetoothConfig;
+    }
+
+    public void setClassicBluetoothConfig(ClassicBluetoothConfig classicBluetoothConfig) {
+        mClassicBluetoothConfig = classicBluetoothConfig;
+    }
+
+    /**
+     * The config only for classic bluetooth
+     */
+    public static class ClassicBluetoothConfig {
+        private int    pairMode = ClassicBluetoothPairMode.JUST_WORK;
+        private String pinCode  = "1234";
+
+        /**
+         * Default mode:JUST_WORK.
+         * JUST_WORK: Connect without pair
+         * PIN_CODE: If the device is not bound, it will be paired before connecting
+         *
+         * @param pairMode
+         * @return
+         */
+        public ClassicBluetoothConfig setPairMode(@PairMode int pairMode) {
+            this.pairMode = pairMode;
+            return this;
+        }
+
+        public int getPairMode() {
+            return pairMode;
+        }
+
+        public String getPinCode() {
+            return pinCode;
+        }
+
+        /**
+         * Only the paired mode of PIN_CODE need to call this method
+         *
+         * @param pinCode
+         * @return
+         */
+        public ClassicBluetoothConfig setPinCode(String pinCode) {
+            this.pinCode = pinCode;
+            return this;
+        }
     }
 
 
@@ -453,7 +545,6 @@ public class HBluetooth {
         destroyChannel();
         resetCallBack();
     }
-
 
 
     private static Context APPLICATION_CONTEXT;

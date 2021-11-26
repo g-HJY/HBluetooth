@@ -13,18 +13,18 @@ import com.hjy.bluetooth.HBluetooth;
 import com.hjy.bluetooth.constant.BluetoothState;
 import com.hjy.bluetooth.inter.ConnectCallBack;
 import com.hjy.bluetooth.operator.abstra.Sender;
+import com.hjy.bluetooth.operator.impl.BluetoothReceiver;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * Created by _H_JY on 2018/10/22.
  * Connected thread for classic bluetooth.
  */
-public class BluetoothConnectAsyncTask extends WeakAsyncTask<Void, Void, Integer, Context> {
+public class ClassicBluetoothConnectTask extends WeakAsyncTask<Void, Void, Integer, Context> {
 
     private              BluetoothSocket      bluetoothSocket;
     private              BluetoothDevice      bluetoothDevice;
@@ -37,20 +37,29 @@ public class BluetoothConnectAsyncTask extends WeakAsyncTask<Void, Void, Integer
     //The interval between two reconnection detection shall not be less than 2000ms
     private static final int                  FAST_RECONNECT_DELAY_TIME = 2000;
 
-    public BluetoothConnectAsyncTask(Context context, Handler handler, Map<String, Boolean> timeOutDeviceMap, BluetoothDevice bluetoothDevice, ConnectCallBack connectCallBack) {
+    public ClassicBluetoothConnectTask(Context context, Handler handler, Map<String, Boolean> timeOutDeviceMap, BluetoothDevice bluetoothDevice, ConnectCallBack connectCallBack) {
         super(context);
         this.bluetoothDevice = bluetoothDevice;
         this.mContext = context;
         this.handler = handler;
         this.timeOutDeviceMap = timeOutDeviceMap;
         this.connectCallBack = connectCallBack;
+
         try {
+            //If the socket is not released before connecting, release it first
+            if (bluetoothSocket != null) {
+                bluetoothSocket.close();
+                bluetoothSocket = null;
+            }
+
             Method method;
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+                //Establish an insecure Bluetooth connection. If pairing is not performed, the pairing box will not pop up
                 method = this.bluetoothDevice.getClass().getMethod("createInsecureRfcommSocket", new Class[]{int.class});
             } else {
                 method = this.bluetoothDevice.getClass().getMethod("createRfcommSocket", new Class[]{int.class});
             }
+
             this.bluetoothSocket = (BluetoothSocket) method.invoke(this.bluetoothDevice, 1);
 
         } catch (NoSuchMethodException e) {
@@ -59,15 +68,10 @@ public class BluetoothConnectAsyncTask extends WeakAsyncTask<Void, Void, Integer
             e.printStackTrace();
         } catch (InvocationTargetException e) {
             e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
-        if(this.bluetoothSocket == null){
-            try {
-                this.bluetoothSocket = this.bluetoothDevice.createInsecureRfcommSocketToServiceRecord(UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
-            } catch (IOException ex) {
-                System.out.println("Failed to create RfComm socket: " + ex.toString());
-            }
-        }
     }
 
 
@@ -87,9 +91,10 @@ public class BluetoothConnectAsyncTask extends WeakAsyncTask<Void, Void, Integer
             //If the connection timeout is set, enable timeout detection
             final HBluetooth hBluetooth = HBluetooth.getInstance();
             int connectTimeOut = hBluetooth.getConnectTimeOut();
+            Runnable timeOutRunnable = null;
             if (connectTimeOut > 0) {
                 timeOutDeviceMap.put(bluetoothDevice.getAddress(), false);
-                handler.postDelayed(new Runnable() {
+                timeOutRunnable = new Runnable() {
                     @Override
                     public void run() {
                         if (!hBluetooth.isConnected()) {
@@ -100,7 +105,8 @@ public class BluetoothConnectAsyncTask extends WeakAsyncTask<Void, Void, Integer
                             }
                         }
                     }
-                }, connectTimeOut);
+                };
+                handler.postDelayed(timeOutRunnable, connectTimeOut);
             }
 
 
@@ -117,6 +123,11 @@ public class BluetoothConnectAsyncTask extends WeakAsyncTask<Void, Void, Integer
                         e1.printStackTrace();
                     }
                 }
+            }
+
+            //Remove the listener of time out
+            if (timeOutRunnable != null) {
+                handler.removeCallbacks(timeOutRunnable);
             }
 
             if (!timeOutDeviceMap.get(bluetoothDevice.getAddress())) {
@@ -157,6 +168,10 @@ public class BluetoothConnectAsyncTask extends WeakAsyncTask<Void, Void, Integer
                 hBluetooth.setUserActiveDisconnect(false);
                 if (hBluetooth.connector() != null) {
                     hBluetooth.connector().setRetryTimes(0);
+                }
+                if (hBluetooth.receiver() != null) {
+                    BluetoothReceiver bluetoothReceiver = (BluetoothReceiver) hBluetooth.receiver();
+                    bluetoothReceiver.openClassicBluetoothReceiveThread(bluetoothSocket);
                 }
                 this.connectCallBack.onConnected(sender);
             } else if (result == BluetoothState.CONNECT_FAIL) {

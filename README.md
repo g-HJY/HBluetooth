@@ -35,7 +35,7 @@ Add it in your root build.gradle at the end of repositories:
  Step 2. Add the dependency
 
 	dependencies {
-	     implementation 'com.github.g-HJY:HBluetooth:V1.3.4'
+	     implementation 'com.github.g-HJY:HBluetooth:V1.3.5'
 	}
 
 
@@ -57,7 +57,7 @@ Add it in your root build.gradle at the end of repositories:
 2.然后必须调用enableBluetooth()方法开启蓝牙功能，你可以在activity中调用：
 
                  //开启蓝牙功能
-                 HBluetooth.getInstance().enableBluetooth()
+                 HBluetooth.getInstance().enableBluetooth();
 
 
 

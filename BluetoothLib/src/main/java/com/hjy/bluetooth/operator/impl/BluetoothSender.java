@@ -13,13 +13,12 @@ import com.hjy.bluetooth.entity.BluetoothDevice;
 import com.hjy.bluetooth.exception.BluetoothException;
 import com.hjy.bluetooth.inter.ConnectCallBack;
 import com.hjy.bluetooth.inter.SendCallBack;
+import com.hjy.bluetooth.operator.abstra.Receiver;
 import com.hjy.bluetooth.operator.abstra.Sender;
 import com.hjy.bluetooth.utils.ArrayUtils;
 import com.hjy.bluetooth.utils.BleNotifier;
 import com.hjy.bluetooth.utils.LockStore;
-import com.hjy.bluetooth.utils.ReceiveHolder;
 
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -99,12 +98,14 @@ public class BluetoothSender extends Sender {
         //Classic bluetooth disconnect
         if (mSocket != null) {
             try {
+                //Close the receiver before the socket close
+                Receiver receiver = HBluetooth.getInstance().receiver();
+                if(receiver != null){
+                    BluetoothReceiver bluetoothReceiver = (BluetoothReceiver) receiver;
+                    bluetoothReceiver.closeClassicBluetoothReceiveThread();
+                }
                 mSocket.close();
                 mSocket = null;
-                if (connectCallBack != null) {
-                    connectCallBack.onDisConnected();
-                    connectCallBack = null;
-                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -203,21 +204,12 @@ public class BluetoothSender extends Sender {
                             os.write(command);
                             os.flush();
 
-                            //Get return's data.
-                            DataInputStream dis = new DataInputStream(mSocket.getInputStream());
-                            byte[] buffer = new byte[1024];
-                            int size = mSocket.getInputStream().read(buffer);
-                            byte[] result = new byte[size];
-                            System.arraycopy(buffer, 0, result, 0, size);
-
-                            ReceiveHolder.receiveClassicBluetoothReturnData(dis, result);
-
                         } catch (IOException e) {
                             e.printStackTrace();
-                            sendFailCallBack("Bluetooth socket write IOException");
+                            sendFailCallBack("Bluetooth socket write IOException."+e.getMessage());
                         } catch (InterruptedException e) {
                             e.printStackTrace();
-                            sendFailCallBack("Bluetooth socket write InterruptedException");
+                            sendFailCallBack("Bluetooth socket write InterruptedException"+e.getMessage());
                         } finally {
                             LockStore.releaseLock(LOCK_NAME);
                         }

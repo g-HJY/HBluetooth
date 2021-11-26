@@ -17,6 +17,6 @@ public class MyApp extends Application {
         //初始化 HBluetooth
         HBluetooth.init(this);
         HBluetooth.getInstance()
-                .setConnectTimeOut(5000);
+                .setConnectTimeOut(20000);
     }
 }

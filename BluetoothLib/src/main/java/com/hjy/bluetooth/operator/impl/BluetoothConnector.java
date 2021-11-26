@@ -18,17 +18,20 @@ import android.os.Looper;
 import android.text.TextUtils;
 
 import com.hjy.bluetooth.HBluetooth;
-import com.hjy.bluetooth.async.BluetoothConnectAsyncTask;
+import com.hjy.bluetooth.async.ClassicBluetoothConnectTask;
 import com.hjy.bluetooth.constant.BluetoothState;
+import com.hjy.bluetooth.constant.ClassicBluetoothPairMode;
 import com.hjy.bluetooth.exception.BluetoothException;
 import com.hjy.bluetooth.inter.BleMtuChangedCallback;
 import com.hjy.bluetooth.inter.BleNotifyCallBack;
+import com.hjy.bluetooth.inter.ClassicBluetoothPairCallBack;
 import com.hjy.bluetooth.inter.ConnectCallBack;
 import com.hjy.bluetooth.operator.abstra.Connector;
 import com.hjy.bluetooth.operator.abstra.Sender;
 import com.hjy.bluetooth.utils.BleNotifier;
 import com.hjy.bluetooth.utils.ReceiveHolder;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
@@ -45,9 +48,10 @@ public class BluetoothConnector extends Connector {
 
     private              Context                                  mContext;
     private              BluetoothAdapter                         bluetoothAdapter;
-    private              BluetoothConnectAsyncTask                connectAsyncTask;
+    private              ClassicBluetoothConnectTask              connectAsyncTask;
     private              ConnectCallBack                          connectCallBack;
     private              BleNotifyCallBack                        bleNotifyCallBack;
+    private              ClassicBluetoothPairCallBack             pairCallBack;
     private              Handler                                  handler;
     private              Map<String, Boolean>                     timeOutDeviceMap;
     private              com.hjy.bluetooth.entity.BluetoothDevice device;
@@ -76,51 +80,88 @@ public class BluetoothConnector extends Connector {
         final BluetoothDevice remoteDevice = bluetoothAdapter.getRemoteDevice(device.getAddress());
 
         if (device.getType() == BluetoothDevice.DEVICE_TYPE_CLASSIC) { //Classic Bluetooth Type.
-            if (remoteDevice.getBondState() != BluetoothDevice.BOND_BONDED) { //If no paired,register a broadcast to paired.
-                /*Add automatic pairing*/
-                IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_PAIRING_REQUEST);
+            int pairMode = ClassicBluetoothPairMode.JUST_WORK;
+            String pinCode = "1234";
+            HBluetooth.ClassicBluetoothConfig config = hBluetooth.getClassicBluetoothConfig();
+            if (config != null) {
+                pairMode = config.getPairMode();
+                pinCode = config.getPinCode();
+            }
+
+            if (pairMode == ClassicBluetoothPairMode.PIN_CODE &&
+                    remoteDevice.getBondState() != BluetoothDevice.BOND_BONDED) {
+                //If no paired,register a broadcast to paired.
+                //Add automatic pairing
+                IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
+                filter.addAction(BluetoothDevice.ACTION_PAIRING_REQUEST);
+
+                final String finalPinCode = pinCode;
                 mContext.registerReceiver(new BroadcastReceiver() {
                     @Override
                     public void onReceive(Context context, Intent intent) {
                         if (BluetoothDevice.ACTION_PAIRING_REQUEST.equals(intent.getAction())) {
                             try {
-                                byte[] pin = (byte[]) BluetoothDevice.class.getMethod("convertPinToBytes", String.class).invoke(BluetoothDevice.class, "1234");
+                                abortBroadcast();
+                                byte[] pin = (byte[]) BluetoothDevice.class.getMethod("convertPinToBytes", String.class).invoke(BluetoothDevice.class, finalPinCode);
                                 Method m = remoteDevice.getClass().getMethod("setPin", byte[].class);
                                 m.invoke(remoteDevice, pin);
                                 remoteDevice.getClass().getMethod("setPairingConfirmation", boolean.class).invoke(remoteDevice, true);
                                 System.out.println("PAIRED !");
-                                //context.unregisterReceiver(this);
-                                /*Paired successfully，interrupt broadcast*/
-                                abortBroadcast();
+
                                 //Already bound,start connection thread
                                 initializeRelatedNullVariable();
-                                connectAsyncTask = new BluetoothConnectAsyncTask(mContext, handler,
+                                connectAsyncTask = new ClassicBluetoothConnectTask(mContext, handler,
                                         timeOutDeviceMap, remoteDevice, connectCallBack);
                                 connectAsyncTask.execute();
                             } catch (Exception e) {
                                 e.printStackTrace();
+                                if (pairCallBack != null) {
+                                    pairCallBack.onPairFailure(new BluetoothException("Pair failure," + e.getMessage()));
+                                }
                                 if (connectCallBack != null) {
                                     connectCallBack.onError(BluetoothState.PAIRED_FAILED, "Automatic pairing failed, please pair manually.");
                                 }
+                            }
+                        } else if (BluetoothDevice.ACTION_BOND_STATE_CHANGED.equals(intent.getAction()) && pairCallBack != null) {
+                            BluetoothDevice bluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                            int bondSate = bluetoothDevice.getBondState();
+                            switch (bondSate) {
+                                case BluetoothDevice.BOND_NONE:
+                                    pairCallBack.onPairRemoved();
+                                    break;
+
+                                case BluetoothDevice.BOND_BONDING:
+                                    pairCallBack.onPairing();
+                                    break;
+
+                                case BluetoothDevice.BOND_BONDED:
+                                    pairCallBack.onPairSuccess();
+                                    break;
                             }
                         }
                     }
                 }, filter);
 
-                //Have not bond,create bond
+                //When it is lower than Android API 19, the pairing method is a hidden method, so it can only be implemented through the reflection method.
                 try {
                     Method creMethod = BluetoothDevice.class.getMethod("createBond");
                     creMethod.invoke(remoteDevice);
-                } catch (Exception e) {
+                } catch (NoSuchMethodException e) {
+                    e.printStackTrace();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                } catch (InvocationTargetException e) {
                     e.printStackTrace();
                 }
+
             } else {
-                //Already bound,start connection thread
+                //start connection thread
                 initializeRelatedNullVariable();
-                connectAsyncTask = new BluetoothConnectAsyncTask(mContext, handler,
+                connectAsyncTask = new ClassicBluetoothConnectTask(mContext, handler,
                         timeOutDeviceMap, remoteDevice, this.connectCallBack);
                 connectAsyncTask.execute();
             }
+
 
         } else if (device.getType() == BluetoothDevice.DEVICE_TYPE_LE) { //BLE Type.
             //Get related config of connection
@@ -171,6 +212,11 @@ public class BluetoothConnector extends Connector {
     @Override
     public void connect(com.hjy.bluetooth.entity.BluetoothDevice device, ConnectCallBack connectCallBack, BleNotifyCallBack notifyCallBack) {
         this.bleNotifyCallBack = notifyCallBack;
+        connect(device, connectCallBack);
+    }
+
+    public void connect(com.hjy.bluetooth.entity.BluetoothDevice device, ClassicBluetoothPairCallBack classicBluetoothPairCallBack, ConnectCallBack connectCallBack) {
+        this.pairCallBack = classicBluetoothPairCallBack;
         connect(device, connectCallBack);
     }
 
