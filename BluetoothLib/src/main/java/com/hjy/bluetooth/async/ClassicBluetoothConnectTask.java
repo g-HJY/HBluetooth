@@ -34,6 +34,7 @@ public class ClassicBluetoothConnectTask extends WeakAsyncTask<Void, Void, Integ
     private              Sender               sender;
     private              Handler              handler;
     private              Map<String, Boolean> timeOutDeviceMap;
+    private              String               failMsg;
     private              long                 lastCheckReconnectTime    = 0L;
     //The interval between two reconnection detection shall not be less than 2000ms
     private static final int                  FAST_RECONNECT_DELAY_TIME = 2000;
@@ -102,7 +103,7 @@ public class ClassicBluetoothConnectTask extends WeakAsyncTask<Void, Void, Integ
                             timeOutDeviceMap.put(bluetoothDevice.getAddress(), true);
                             hBluetooth.releaseIgnoreActiveDisconnect();
                             if (connectCallBack != null) {
-                                connectCallBack.onError(BluetoothState.CONNECT_TIMEOUT, "Connect time out");
+                                connectCallBack.onError(BluetoothState.CONNECT_TIMEOUT, "Connect failed! Reason: Time out");
                             }
                         }
                     }
@@ -117,7 +118,7 @@ public class ClassicBluetoothConnectTask extends WeakAsyncTask<Void, Void, Integ
                     bluetoothSocket.connect();
                     break;
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    failMsg = e.getMessage();
                     try {
                         bluetoothSocket.close();
                     } catch (IOException e1) {
@@ -154,14 +155,9 @@ public class ClassicBluetoothConnectTask extends WeakAsyncTask<Void, Void, Integ
     protected void onPostExecute(Context context, Integer result) {
         if (this.connectCallBack != null) {
             if (result == BluetoothState.CONNECT_SUCCESS) {
-                try {
-                    mContext.unregisterReceiver(mReceiver);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                closeDisconnectionBroadcastReceiver();
                 //Register to disconnect broadcast listening
-                IntentFilter filter = new IntentFilter();
-                filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+                IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECTED);
                 mContext.registerReceiver(mReceiver, filter);
 
                 //After connected, reset the parameters related to reconnection
@@ -176,12 +172,21 @@ public class ClassicBluetoothConnectTask extends WeakAsyncTask<Void, Void, Integ
                 }
                 this.connectCallBack.onConnected(sender);
             } else if (result == BluetoothState.CONNECT_FAIL) {
-                this.connectCallBack.onError(BluetoothState.CONNECT_FAIL, "Connect failed!");
+                this.connectCallBack.onError(BluetoothState.CONNECT_FAIL, "Connect failed! Reason:" + failMsg);
                 checkClassicBluetoothReconnect();
             } else {
                 //If it is a passive disconnection and the reconnection mechanism is enabled, reconnect when disconnected
                 checkClassicBluetoothReconnect();
             }
+        }
+    }
+
+
+    private void closeDisconnectionBroadcastReceiver() {
+        try {
+            mContext.unregisterReceiver(mReceiver);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -193,13 +198,15 @@ public class ClassicBluetoothConnectTask extends WeakAsyncTask<Void, Void, Integ
                 HBluetooth.getInstance().setConnected(false);
                 //Close the receiver
                 Receiver receiver = HBluetooth.getInstance().receiver();
-                if(receiver != null){
+                if (receiver != null) {
                     BluetoothReceiver bluetoothReceiver = (BluetoothReceiver) receiver;
                     bluetoothReceiver.closeClassicBluetoothReceiveThread();
                 }
                 if (connectCallBack != null) {
                     connectCallBack.onDisConnected();
                 }
+
+                closeDisconnectionBroadcastReceiver();
 
                 //If it is a passive disconnection and the reconnection mechanism is enabled, reconnect when disconnected
                 checkClassicBluetoothReconnect();

@@ -99,6 +99,7 @@ public class BluetoothSender extends Sender {
             try {
                 mSocket.close();
                 mSocket = null;
+                HBluetooth.getInstance().setConnected(false);
             } catch (IOException e) {
                 e.printStackTrace();
             }

@@ -114,9 +114,8 @@ public class BluetoothConnector extends Connector {
                                         timeOutDeviceMap, remoteDevice, connectCallBack);
                                 connectAsyncTask.execute();
                             } catch (Exception e) {
-                                e.printStackTrace();
                                 if (pairCallBack != null) {
-                                    pairCallBack.onPairFailure(new BluetoothException("Pair failure," + e.getMessage()));
+                                    pairCallBack.onPairFailure(new BluetoothException("Pair failure," + (e.getMessage() == null ? e.getCause() : e.getMessage())));
                                 }
                                 if (connectCallBack != null) {
                                     connectCallBack.onError(BluetoothState.PAIRED_FAILED, "Automatic pairing failed, please pair manually.");
