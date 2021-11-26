@@ -12,6 +12,7 @@ import android.os.Handler;
 import com.hjy.bluetooth.HBluetooth;
 import com.hjy.bluetooth.constant.BluetoothState;
 import com.hjy.bluetooth.inter.ConnectCallBack;
+import com.hjy.bluetooth.operator.abstra.Receiver;
 import com.hjy.bluetooth.operator.abstra.Sender;
 import com.hjy.bluetooth.operator.impl.BluetoothReceiver;
 
@@ -190,6 +191,12 @@ public class ClassicBluetoothConnectTask extends WeakAsyncTask<Void, Void, Integ
         public void onReceive(Context context, Intent intent) {
             if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(intent.getAction())) {
                 HBluetooth.getInstance().setConnected(false);
+                //Close the receiver
+                Receiver receiver = HBluetooth.getInstance().receiver();
+                if(receiver != null){
+                    BluetoothReceiver bluetoothReceiver = (BluetoothReceiver) receiver;
+                    bluetoothReceiver.closeClassicBluetoothReceiveThread();
+                }
                 if (connectCallBack != null) {
                     connectCallBack.onDisConnected();
                 }

@@ -13,7 +13,6 @@ import com.hjy.bluetooth.entity.BluetoothDevice;
 import com.hjy.bluetooth.exception.BluetoothException;
 import com.hjy.bluetooth.inter.ConnectCallBack;
 import com.hjy.bluetooth.inter.SendCallBack;
-import com.hjy.bluetooth.operator.abstra.Receiver;
 import com.hjy.bluetooth.operator.abstra.Sender;
 import com.hjy.bluetooth.utils.ArrayUtils;
 import com.hjy.bluetooth.utils.BleNotifier;
@@ -98,12 +97,6 @@ public class BluetoothSender extends Sender {
         //Classic bluetooth disconnect
         if (mSocket != null) {
             try {
-                //Close the receiver before the socket close
-                Receiver receiver = HBluetooth.getInstance().receiver();
-                if(receiver != null){
-                    BluetoothReceiver bluetoothReceiver = (BluetoothReceiver) receiver;
-                    bluetoothReceiver.closeClassicBluetoothReceiveThread();
-                }
                 mSocket.close();
                 mSocket = null;
             } catch (IOException e) {
