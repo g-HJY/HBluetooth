@@ -1,11 +1,11 @@
 # HBluetooth
-封装了支持经典蓝牙或低功耗蓝牙扫描，连接，以及通信的库。附带使用例子。
-
-该库后续会持续升级维护，敬请关注...
-
 ![未标题-1](https://user-images.githubusercontent.com/15326847/142364112-dc66af7a-440f-4c11-97d5-f3619b892e75.png)
 
-该项目拥有如下优点：
+### 简介
+
+封装了支持经典蓝牙或低功耗蓝牙扫描，连接，以及通信的库。附带使用例子。该库后续会持续升级维护，敬请关注...
+
+### 项目优点：
 
 1.轻量级，无过度封装，简单易懂
 
@@ -17,7 +17,15 @@
 
 5....
 
-一.集成方式
+### 适用场景：
+
+作为主设备的智能手机（客户端Client）去连接从设备（服务端），如用安卓手机去连接智能手环、智能灯泡之类。
+
+
+
+### 集成方式
+
+一.项目依赖
 
 To get a Git project into your build:
 
@@ -31,11 +39,11 @@ Add it in your root build.gradle at the end of repositories:
 			maven { url 'https://jitpack.io' }
 		}
 	}
- 
+
  Step 2. Add the dependency
 
 	dependencies {
-	     implementation 'com.github.g-HJY:HBluetooth:V1.3.5'
+	     implementation 'com.github.g-HJY:HBluetooth:V1.3.6'
 	}
 
 
@@ -244,7 +252,7 @@ Add it in your root build.gradle at the end of repositories:
 
 
 8.最后，调用以下方法去主动断开连接并释放资源 ：
-                
+
                 HBluetooth.getInstance().release();
 
 

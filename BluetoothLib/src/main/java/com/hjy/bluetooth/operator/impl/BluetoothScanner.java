@@ -28,15 +28,17 @@ import java.util.List;
  */
 public class BluetoothScanner extends Scanner {
 
-    private int                   scanType;
-    private boolean               isScanning;
-    private Context               mContext;
-    private ScanCallBack          scanCallBack;
-    private BluetoothLeScanner    bluetoothLeScanner;
-    private List<BluetoothDevice> bluetoothDevices;
-    private BluetoothAdapter      bluetoothAdapter;
-    private Handler               handler;
-    private boolean               liveUpdateScannedDeviceName;
+    private int scanType, continuousScanTimes;
+    private              boolean               isScanning;
+    private              Context               mContext;
+    private              ScanCallBack          scanCallBack;
+    private              BluetoothLeScanner    bluetoothLeScanner;
+    private              List<BluetoothDevice> bluetoothDevices;
+    private              BluetoothAdapter      bluetoothAdapter;
+    private              Handler               handler;
+    private              boolean               liveUpdateScannedDeviceName;
+    private              long                  lastCheckPeriodScanNumLimitTime  = 0L;
+    private static final int                   PERIOD_SCAN_NUM_LIMIT_DELAY_TIME = 30 * 1000;
 
     private BluetoothScanner() {
     }
@@ -115,6 +117,23 @@ public class BluetoothScanner extends Scanner {
                 bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
                 if (bluetoothLeScanner != null) {
                     isScanning = true;
+
+                    //Since Android 7.0 does not allow 5 consecutive scans within 30s, otherwise any device cannot be scanned
+                    //Once this limit is exceeded, a prompt is given
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        if (continuousScanTimes == 0) {
+                            lastCheckPeriodScanNumLimitTime = System.currentTimeMillis();
+                        }
+                        continuousScanTimes++;
+                        long checkPeriodScanNumTimeDiff = System.currentTimeMillis() - lastCheckPeriodScanNumLimitTime;
+                        if (checkPeriodScanNumTimeDiff > PERIOD_SCAN_NUM_LIMIT_DELAY_TIME) {
+                            continuousScanTimes = 0;
+                            lastCheckPeriodScanNumLimitTime = System.currentTimeMillis();
+                        } else if (this.scanCallBack != null && continuousScanTimes > 5) {
+                            this.scanCallBack.onError(3, "Forbidden,please do not scan more than 5 times in 30s");
+                        }
+                    }
+
                     bluetoothLeScanner.startScan(mScanCallback);
                 } else if (this.scanCallBack != null) {
                     this.scanCallBack.onError(3, "BluetoothLeScanner is null,make sure you have Bluetooth enabled or open permissions");

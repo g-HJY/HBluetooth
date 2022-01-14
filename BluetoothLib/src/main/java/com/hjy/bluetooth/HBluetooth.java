@@ -295,6 +295,10 @@ public class HBluetooth {
         isUserActiveDisconnect = userActiveDisconnect;
     }
 
+    /**
+     * Release operation when automatic disconnection.
+     * Please call the 'release()' method to instead when you disconnect manually,for example, through the button.
+     */
     public synchronized void releaseIgnoreActiveDisconnect() {
         cancelScan();
         destroyChannel();

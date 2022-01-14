@@ -179,7 +179,7 @@ public class BluetoothConnector extends Connector {
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        if (!hBluetooth.isConnected()) {
+                        if (!hBluetooth.isConnected() && !hBluetooth.isUserActiveDisconnect()) {
                             timeOutDeviceMap.put(remoteDevice.getAddress(), true);
                             hBluetooth.releaseIgnoreActiveDisconnect();
                             if (connectCallBack != null) {
@@ -288,9 +288,8 @@ public class BluetoothConnector extends Connector {
                     connectCallBack.onConnecting();
                 } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                     HBluetooth.getInstance().setConnected(false);
-                    if (gatt != null) {
-                        gatt.close();
-                    }
+                    gatt.close();
+
                     if (connectCallBack != null) {
                         connectCallBack.onDisConnected();
                     }

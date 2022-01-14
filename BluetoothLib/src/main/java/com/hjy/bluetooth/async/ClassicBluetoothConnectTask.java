@@ -65,13 +65,13 @@ public class ClassicBluetoothConnectTask extends WeakAsyncTask<Void, Void, Integ
             this.bluetoothSocket = (BluetoothSocket) method.invoke(this.bluetoothDevice, 1);
 
         } catch (NoSuchMethodException e) {
-            e.printStackTrace();
+            failMsg = e.getMessage();
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            failMsg = e.getMessage();
         } catch (InvocationTargetException e) {
-            e.printStackTrace();
+            failMsg = e.getMessage();
         } catch (IOException e) {
-            e.printStackTrace();
+            failMsg = e.getMessage();
         }
 
     }

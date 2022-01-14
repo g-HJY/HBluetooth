@@ -56,6 +56,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
         bleConfig.withServiceUUID("0000fe61-0000-1000-8000-00805f9b34fb")
                 .withWriteCharacteristicUUID("0000fe61-0000-1000-8000-00805f9b34fb")
                 .withNotifyCharacteristicUUID("0000fe61-0000-1000-8000-00805f9b34fb")
+                //.liveUpdateScannedDeviceName(true)
                 //命令长度大于20个字节时是否分包发送，默认false,分包时可以调两参方法设置包之间发送间隔
                 //默认false,注释部分为默认值
                 //.splitPacketToSendWhenCmdLenBeyond(false)
@@ -89,7 +90,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
         HBluetooth.getInstance().setReceiver(new ReceiveCallBack() {
             @Override
             public void onReceived(DataInputStream dataInputStream, byte[] result) {
-                // 打开通知后，设备发过来的数据将在这里出现
+                //设备发过来的数据将在这里出现
                 Log.e("mylog", "收到蓝牙设备返回数据->" + Tools.bytesToHexString(result));
             }
         });
@@ -242,7 +243,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
 
             @Override
             public void onScanning(List<BluetoothDevice> scannedDevices, BluetoothDevice currentScannedDevice) {
-                Log.i(TAG, "扫描中");
+                //Log.i(TAG, "扫描中");
                 if (scannedDevices != null && scannedDevices.size() > 0) {
                     list.clear();
                     list.addAll(scannedDevices);
