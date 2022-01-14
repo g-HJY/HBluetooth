@@ -128,7 +128,6 @@ public class BluetoothScanner extends Scanner {
                         long checkPeriodScanNumTimeDiff = System.currentTimeMillis() - lastCheckPeriodScanNumLimitTime;
                         if (checkPeriodScanNumTimeDiff > PERIOD_SCAN_NUM_LIMIT_DELAY_TIME) {
                             continuousScanTimes = 0;
-                            lastCheckPeriodScanNumLimitTime = System.currentTimeMillis();
                         } else if (this.scanCallBack != null && continuousScanTimes > 5) {
                             this.scanCallBack.onError(3, "Forbidden,please do not scan more than 5 times in 30s");
                         }
