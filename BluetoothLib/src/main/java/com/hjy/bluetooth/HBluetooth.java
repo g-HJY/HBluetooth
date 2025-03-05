@@ -31,6 +31,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Created by _H_JY on 2018/10/20.
@@ -376,6 +377,7 @@ public class HBluetooth {
         private int     sendTimeInterval   = 20;
         private int     eachSplitPacketLen = 20;
         private int     notifyDelay        = 200;
+        private UUID[]  scanFilterServerUUIDs;
         private boolean splitPacketToSendWhenCmdLenBeyond, autoConnect;
         private boolean               liveUpdateScannedDeviceName;
         private BleMtuChangedCallback mBleMtuChangedCallback;
@@ -397,6 +399,15 @@ public class HBluetooth {
 
         public BleConfig useCharacteristicDescriptor(boolean useCharacteristicDescriptor) {
             this.useCharacteristicDescriptor = useCharacteristicDescriptor;
+            return this;
+        }
+
+        public UUID[] getScanFilterServerUUIDs() {
+            return scanFilterServerUUIDs;
+        }
+
+        public BleConfig setScanFilterServerUUIDs(UUID[] scanFilterServerUUIDs) {
+            this.scanFilterServerUUIDs = scanFilterServerUUIDs;
             return this;
         }
 

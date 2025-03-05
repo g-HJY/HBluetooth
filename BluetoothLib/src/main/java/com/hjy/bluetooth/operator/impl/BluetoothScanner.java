@@ -3,7 +3,9 @@ package com.hjy.bluetooth.operator.impl;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -12,6 +14,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.ParcelUuid;
 import android.support.annotation.RequiresApi;
 
 import com.hjy.bluetooth.HBluetooth;
@@ -22,6 +25,7 @@ import com.hjy.bluetooth.utils.ScanFilterUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Created by _H_JY on 2018/10/20.
@@ -66,8 +70,10 @@ public class BluetoothScanner extends Scanner {
         stopScan();
 
         HBluetooth.BleConfig bleConfig = HBluetooth.getInstance().getBleConfig();
+        UUID[] scanFilterServerUUIDs = null;
         if (bleConfig != null) {
             this.liveUpdateScannedDeviceName = bleConfig.isLiveUpdateScannedDeviceName();
+            scanFilterServerUUIDs = bleConfig.getScanFilterServerUUIDs();
         }
 
         this.scanType = scanType;
@@ -133,7 +139,24 @@ public class BluetoothScanner extends Scanner {
                         }
                     }
 
-                    bluetoothLeScanner.startScan(mScanCallback);
+
+                    if(scanFilterServerUUIDs != null && scanFilterServerUUIDs.length > 0){
+                        //Scan by specify uuids
+                        //Create filter and add
+                        List<ScanFilter> filters = new ArrayList<>();
+                        for (int i = 0; i < scanFilterServerUUIDs.length; i++) {
+                            //通过指定uuid搜索
+                            ScanFilter scanFilter = new ScanFilter.Builder().setServiceUuid(new ParcelUuid(scanFilterServerUUIDs[i])).build();
+                            filters.add(scanFilter);
+                        }
+                        //Create scan settings
+                        //ScanSettings settings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build();
+                        ScanSettings settings = new ScanSettings.Builder().build();
+                        bluetoothLeScanner.startScan(filters,settings,mScanCallback);
+                    }else {
+                        bluetoothLeScanner.startScan(mScanCallback);
+                    }
+
                 } else if (this.scanCallBack != null) {
                     this.scanCallBack.onError(3, "BluetoothLeScanner is null,make sure you have Bluetooth enabled or open permissions");
                 }
