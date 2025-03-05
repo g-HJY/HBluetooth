@@ -33,9 +33,9 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
 
     private final static String TAG = "mylog";
 
-    private ListView              listView;
+    private ListView listView;
     private List<BluetoothDevice> list = new ArrayList<>();
-    private MyAdapter             adapter;
+    private MyAdapter adapter;
     private int bluetoothType;
     private static final int REQUEST_CODE_SCAN_BT = 100;
     private HBluetooth mHBluetooth;
@@ -116,7 +116,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
     @SuppressLint("NonConstantResourceId")
     @Override
     public void onClick(View view) {
-        switch (view.getId()){
+        switch (view.getId()) {
             case R.id.btn_disconnect:
                 mHBluetooth.release();
                 break;
@@ -131,7 +131,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
         }
     }
 
-    private boolean isAboveAndroid12(){
+    private boolean isAboveAndroid12() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.S;
     }
 
@@ -155,31 +155,29 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
     }
 
 
-    private void checkPermissionAndScan(){
+    private void checkPermissionAndScan() {
         if (isAboveAndroid12()) {
             //Android 12 and above, subdivided Bluetooth permissions, dynamic application required
-            if(bluetoothType == BluetoothDevice.DEVICE_TYPE_LE){
-                if (hasPermission(Manifest.permission.BLUETOOTH_SCAN) && hasPermission(Manifest.permission.BLUETOOTH_CONNECT)) {
-                    scan();
-                } else {
-                    ActivityCompat.requestPermissions(MainActivity.this,
-                            new String[]{ Manifest.permission.BLUETOOTH_SCAN,
-                                          Manifest.permission.BLUETOOTH_CONNECT}, REQUEST_CODE_SCAN_BT);
-                }
-            }else if(bluetoothType == BluetoothDevice.DEVICE_TYPE_CLASSIC){
-                if (hasPermission(Manifest.permission.BLUETOOTH_ADVERTISE)) {
-                    scan();
-                } else {
-                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{ Manifest.permission.BLUETOOTH_ADVERTISE}, REQUEST_CODE_SCAN_BT);
-                }
+            if (hasPermission(Manifest.permission.BLUETOOTH_SCAN) && hasPermission(Manifest.permission.BLUETOOTH_CONNECT)) {
+                scan();
+            } else {
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT}, REQUEST_CODE_SCAN_BT);
             }
         } else {
-            scan();
+            //Before Android 12
+            if(hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)){
+                scan();
+            }else {
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE_SCAN_BT);
+            }
+
         }
     }
 
 
-    private void scan(){
+    private void scan() {
         if (list != null && list.size() > 0) {
             list.clear();
             adapter.notifyDataSetChanged();
@@ -219,7 +217,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
 
                 @Override
                 public void onError(int errorType, String errorMsg) {
-                    Log.e(TAG, "errorType:"+errorType+"  errorMsg:"+errorMsg);
+                    Log.e(TAG, "errorType:" + errorType + "  errorMsg:" + errorMsg);
                 }
 
                 @Override
@@ -317,7 +315,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
 
             @Override
             public void onError(int errorType, String errorMsg) {
-                Log.e(TAG, "errorType:"+errorType+"  errorMsg:"+errorMsg);
+                Log.e(TAG, "errorType:" + errorType + "  errorMsg:" + errorMsg);
             }
 
             @Override

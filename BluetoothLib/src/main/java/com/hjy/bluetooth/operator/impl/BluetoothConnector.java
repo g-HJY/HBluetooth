@@ -1,5 +1,6 @@
 package com.hjy.bluetooth.operator.impl;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -68,6 +69,7 @@ public class BluetoothConnector extends Connector {
     }
 
 
+    @SuppressLint("MissingPermission")
     @Override
     public synchronized void connect(com.hjy.bluetooth.entity.BluetoothDevice device, final ConnectCallBack connectCallBack) {
         this.connectCallBack = connectCallBack;

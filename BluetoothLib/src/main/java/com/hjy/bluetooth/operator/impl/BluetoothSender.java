@@ -1,5 +1,6 @@
 package com.hjy.bluetooth.operator.impl;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
@@ -89,6 +90,7 @@ public class BluetoothSender extends Sender {
         return null;
     }
 
+    @SuppressLint("MissingPermission")
     @Override
     public synchronized void destroyChannel() {
         if (connector != null) {
