@@ -158,7 +158,12 @@ public class ClassicBluetoothConnectTask extends WeakAsyncTask<Void, Void, Integ
                 closeDisconnectionBroadcastReceiver();
                 //Register to disconnect broadcast listening
                 IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECTED);
-                mContext.registerReceiver(mReceiver, filter);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    mContext.registerReceiver(mReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+                }else{
+                    mContext.registerReceiver(mReceiver, filter);
+                }
+
 
                 //After connected, reset the parameters related to reconnection
                 HBluetooth hBluetooth = HBluetooth.getInstance();
@@ -186,7 +191,7 @@ public class ClassicBluetoothConnectTask extends WeakAsyncTask<Void, Void, Integ
         try {
             mContext.unregisterReceiver(mReceiver);
         } catch (Exception e) {
-            e.printStackTrace();
+
         }
     }
 

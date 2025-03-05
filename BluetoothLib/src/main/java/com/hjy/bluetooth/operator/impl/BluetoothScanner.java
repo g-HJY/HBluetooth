@@ -110,7 +110,11 @@ public class BluetoothScanner extends Scanner {
             IntentFilter filter = new IntentFilter();
             filter.addAction(android.bluetooth.BluetoothDevice.ACTION_FOUND);
             filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-            mContext.registerReceiver(mReceiver, filter);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                mContext.registerReceiver(mReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+            }else{
+                mContext.registerReceiver(mReceiver, filter);
+            }
 
             if (!(isScanning = bluetoothAdapter.startDiscovery()) && this.scanCallBack != null) {
                 this.scanCallBack.onError(3, "Start discovery fail,make sure you have Bluetooth enabled or open permissions");
@@ -353,7 +357,7 @@ public class BluetoothScanner extends Scanner {
         try {
             mContext.unregisterReceiver(mReceiver);
         } catch (Exception e) {
-            e.printStackTrace();
+
         }
     }
 }

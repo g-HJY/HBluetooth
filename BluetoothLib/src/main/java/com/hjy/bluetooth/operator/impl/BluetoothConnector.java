@@ -96,7 +96,7 @@ public class BluetoothConnector extends Connector {
                 filter.addAction(BluetoothDevice.ACTION_PAIRING_REQUEST);
 
                 final String finalPinCode = pinCode;
-                mContext.registerReceiver(new BroadcastReceiver() {
+                BroadcastReceiver classicBTPairReceiver = new BroadcastReceiver() {
                     @Override
                     public void onReceive(Context context, Intent intent) {
                         if (BluetoothDevice.ACTION_PAIRING_REQUEST.equals(intent.getAction())) {
@@ -139,7 +139,14 @@ public class BluetoothConnector extends Connector {
                             }
                         }
                     }
-                }, filter);
+                };
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    mContext.registerReceiver(classicBTPairReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+                }else{
+                    mContext.registerReceiver(classicBTPairReceiver, filter);
+                }
+
 
                 //When it is lower than Android API 19, the pairing method is a hidden method, so it can only be implemented through the reflection method.
                 try {
@@ -198,6 +205,8 @@ public class BluetoothConnector extends Connector {
             }
         }
     }
+
+
 
     private void initializeRelatedNullVariable() {
         if (timeOutDeviceMap == null) {
