@@ -43,7 +43,7 @@ Add it in your root build.gradle at the end of repositories:
  Step 2. Add the dependency
 
 	dependencies {
-	     implementation 'com.github.g-HJY:HBluetooth:V1.3.6'
+	     implementation 'com.github.g-HJY:HBluetooth:V1.4.0'
 	}
 
 
@@ -74,29 +74,32 @@ Add it in your root build.gradle at the end of repositories:
 分别是主服务UUID（withServiceUUID）、读写特征值UUID（withWriteCharacteristicUUID）、通知UUID（withNotifyCharacteristicUUID）以及是否设置最大传输单元（setMtu不设置不用调）等；
 您还可以设置分包发送的时间间隔和包长度
 
-	     //请填写你自己设备的UUID
-            //低功耗蓝牙才需要如下配置BleConfig,经典蓝牙不需要new HBluetooth.BleConfig()
-            HBluetooth.BleConfig bleConfig = new HBluetooth.BleConfig();
-            bleConfig.withServiceUUID("0000fe61-0000-1000-8000-00805f9b34fb")
-                     .withWriteCharacteristicUUID("0000fe61-0000-1000-8000-00805f9b34fb")
-                     .withNotifyCharacteristicUUID("0000fe61-0000-1000-8000-00805f9b34fb")
-                    //命令长度大于20个字节时是否分包发送，默认false,分包时可以调两参方法设置包之间发送间隔
-                    //.splitPacketToSendWhenCmdLenBeyond(false)
-                    //useCharacteristicDescriptor 默认false
-                    //.useCharacteristicDescriptor(false)
-                    //连接后开启通知的延迟时间，单位ms，默认200ms
-                    //.notifyDelay(200)
-                    .setMtu(200, new BleMtuChangedCallback() {
-                        @Override
-                        public void onSetMTUFailure(int realMtuSize, BluetoothException bleException) {
-                            Log.i(TAG, "bleException:" + bleException.getMessage() + "  realMtuSize:" + realMtuSize);
-                        }
+	    //请填写你自己设备的UUID
+        //低功耗蓝牙才需要如下配置BleConfig,经典蓝牙不需要new HBluetooth.BleConfig()
+        HBluetooth.BleConfig bleConfig = new HBluetooth.BleConfig();
+        bleConfig.withServiceUUID("0000fe61-0000-1000-8000-00805f9b34fb")
+                .withWriteCharacteristicUUID("0000fe61-0000-1000-8000-00805f9b34fb")
+                .withNotifyCharacteristicUUID("0000fe61-0000-1000-8000-00805f9b34fb")
+                //指定UUID扫描，即扫描过滤掉非当前设置的UUID的设备
+                //.setScanFilterServerUUIDs(new UUID[]{UUID.fromString("0000fe61-0000-1000-8000-00805f9b34fb")})
+                //.liveUpdateScannedDeviceName(true)
+                //命令长度大于20个字节时是否分包发送，默认false,分包时可以调两参方法设置包之间发送间隔
+                //默认false,注释部分为默认值
+                //.splitPacketToSendWhenCmdLenBeyond(false)
+                //.useCharacteristicDescriptor(false)
+                //连接后开启通知的延迟时间，单位ms，默认200ms
+                //.notifyDelay(200)
+                .setMtu(200, new BleMtuChangedCallback() {
+                    @Override
+                    public void onSetMTUFailure(int realMtuSize, BluetoothException bleException) {
+                        Log.i(TAG, "bleException:" + bleException.getMessage() + "  realMtuSize:" + realMtuSize);
+                    }
 
-                        @Override
-                        public void onMtuChanged(int mtuSize) {
-                            Log.i(TAG, "Mtu set success,mtuSize:" + mtuSize);
-                        }
-                    });
+                    @Override
+                    public void onMtuChanged(int mtuSize) {
+                        Log.i(TAG, "Mtu set success,mtuSize:" + mtuSize);
+                    }
+                });
          //低功耗蓝牙才需要调setBleConfig
 		HBluetooth.getInstance().setBleConfig(bleConfig);
 
