@@ -170,7 +170,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
                 scan();
             }else {
                 ActivityCompat.requestPermissions(MainActivity.this,
-                        new String[]{Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE_SCAN_BT);
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE_SCAN_BT);
             }
 
         }
