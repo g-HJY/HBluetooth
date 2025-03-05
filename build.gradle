@@ -4,11 +4,18 @@ buildscript {
     
     repositories {
         google()
-        maven { url 'http://maven.aliyun.com/nexus/content/repositories/jcenter' }
+        maven {
+            allowInsecureProtocol = true
+            url 'http://maven.aliyun.com/nexus/content/repositories/jcenter'
+        }
+        maven {
+            allowInsecureProtocol = true
+            url 'https://www.jitpack.io'
+        }
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.5.2'
+        classpath 'com.android.tools.build:gradle:7.4.2'
         
 
         // NOTE: Do not place your application dependencies here; they belong
@@ -19,9 +26,15 @@ buildscript {
 allprojects {
     repositories {
         google()
-        maven { url 'http://maven.aliyun.com/nexus/content/repositories/jcenter' }
+        maven {
+            allowInsecureProtocol = true
+            url 'http://maven.aliyun.com/nexus/content/repositories/jcenter'
+        }
+        maven {
+            allowInsecureProtocol = true
+            url 'https://www.jitpack.io'
+        }
         mavenCentral()
-        maven { url 'https://www.jitpack.io' }
     }
 }
 
