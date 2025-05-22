@@ -84,6 +84,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
                     }
                 });
 
+        checkPermissionAndScan();
 
         mHBluetooth
                 //开启蓝牙功能
