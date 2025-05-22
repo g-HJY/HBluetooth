@@ -4,108 +4,8 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1f686400-f73c-40c6-b69b-07fc84a3cc10" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.gradle/7.5/checksums/checksums.lock" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.gradle/7.5/checksums/md5-checksums.bin" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.gradle/7.5/checksums/sha1-checksums.bin" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.gradle/7.5/dependencies-accessors/dependencies-accessors.lock" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.gradle/7.5/dependencies-accessors/gc.properties" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.gradle/7.5/executionHistory/executionHistory.lock" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.gradle/7.5/fileChanges/last-build.bin" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.gradle/7.5/fileHashes/fileHashes.bin" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.gradle/7.5/fileHashes/fileHashes.lock" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.gradle/7.5/gc.properties" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/cache.properties" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/outputFiles.bin" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.gradle/config.properties" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.gradle/vcs-1/gc.properties" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/AndroidProjectSystem.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/migrations.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/runConfigurations.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/build.gradle" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/proguard-rules.pro" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/androidTest/java/com/hjy/bluetooth/ExampleInstrumentedTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/AndroidManifest.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/HBluetooth.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/async/ClassicBluetoothConnectTask.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/async/WeakAsyncTask.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/constant/BluetoothState.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/constant/ClassicBluetoothPairMode.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/constant/ValueLimit.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/entity/BluetoothDevice.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/entity/ScanFilter.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/exception/BluetoothException.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/inter/BleMtuChangedCallback.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/inter/BleNotifyCallBack.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/inter/ClassicBluetoothPairCallBack.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/inter/ConnectCallBack.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/inter/ReceiveCallBack.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/inter/ScanCallBack.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/inter/SendCallBack.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/operator/abstra/Connector.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/operator/abstra/Receiver.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/operator/abstra/Scanner.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/operator/abstra/Sender.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/operator/impl/BluetoothConnector.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/operator/impl/BluetoothReceiver.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/operator/impl/BluetoothScanner.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/operator/impl/BluetoothSender.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/utils/ArrayUtils.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/utils/BleNotifier.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/utils/LockStore.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/utils/ReceiveHolder.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/java/com/hjy/bluetooth/utils/ScanFilterUtils.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/main/res/values/strings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BluetoothLib/src/test/java/com/hjy/bluetooth/ExampleUnitTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/build.gradle" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/keystore/ble.jks" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/proguard-rules.pro" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/androidTest/java/com/hjy/test/ExampleInstrumentedTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/hjy/test/MainActivity.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/hjy/test/MyAdapter.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/hjy/test/MyApp.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/hjy/test/Tools.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/hjy/test/ViewHolder.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/res/drawable/ic_launcher_background.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/res/layout/activity_main.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/res/layout/list_item.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-hdpi/ic_launcher.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-hdpi/ic_launcher_round.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-mdpi/ic_launcher.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-mdpi/ic_launcher_round.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-xhdpi/ic_launcher.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-xxhdpi/ic_launcher.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/res/values/colors.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/res/values/strings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/res/values/styles.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/test/java/com/hjy/test/ExampleUnitTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gradle.properties" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.jar" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.properties" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gradlew" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gradlew.bat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/local.properties" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/settings.gradle" afterDir="false" />
+    <list default="true" id="1f686400-f73c-40c6-b69b-07fc84a3cc10" name="Changes" comment="修复高版本系统经典蓝牙扫描不到设备的问题">
+      <change beforePath="$PROJECT_DIR$/app/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/app/build.gradle" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -232,6 +132,42 @@
       <option name="presentableId" value="Default" />
       <updated>1747909693584</updated>
     </task>
+    <task id="LOCAL-00001" summary="修复高版本系统经典蓝牙扫描不到设备的问题">
+      <option name="closed" value="true" />
+      <created>1747910297553</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1747910297553</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
+    <option name="CHECK_NEW_TODO" value="false" />
+    <MESSAGE value="修复高版本系统经典蓝牙扫描不到设备的问题" />
+    <option name="LAST_COMMIT_MESSAGE" value="修复高版本系统经典蓝牙扫描不到设备的问题" />
+  </component>
+  <component name="play_dynamic_filters_status">
+    <option name="appIdToCheckInfo">
+      <map>
+        <entry key="com.hjy.bluetooth.test">
+          <value>
+            <CheckInfo lastCheckTimestamp="1747910256770" />
+          </value>
+        </entry>
+        <entry key="com.hjy.test">
+          <value>
+            <CheckInfo lastCheckTimestamp="1747910256773" />
+          </value>
+        </entry>
+        <entry key="com.hjy.test.test">
+          <value>
+            <CheckInfo lastCheckTimestamp="1747910256772" />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
 </project>

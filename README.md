@@ -43,7 +43,7 @@ Add it in your root build.gradle at the end of repositories:
  Step 2. Add the dependency
 
 	dependencies {
-	     implementation 'com.github.g-HJY:HBluetooth:V1.4.2'
+	     implementation 'com.github.g-HJY:HBluetooth:V1.4.3'
 	}
 
 
